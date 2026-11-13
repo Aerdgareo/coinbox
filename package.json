@@ -58,5 +58,5 @@
       "artifactName": "CoinBox-${version}-x64-Setup.${ext}"
     }
   },
-  "license": "MIT"
+  "license": "GPL-3.0-or-later"
 }

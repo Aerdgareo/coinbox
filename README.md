@@ -90,7 +90,15 @@ Windows 需要系统装有微软雅黑等中文字体；Android 5.x 的 WebView 
 
 ## 许可证
 
-代码以 [MIT License](LICENSE) 开源，可自由使用、修改、分发（保留版权声明即可）。
+Copyright (C) 2026 Aerdgareo
+
+代码以 **GNU General Public License v3.0 或更新版本**（`GPL-3.0-or-later`）开源，协议全文见 [LICENSE](LICENSE)。
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+> 简单说：可以自用、可以改，但**分发修改版时必须同样以 GPL 开放源代码**，并保留版权与协议声明；不能把改过的版本闭源发布。
 
 立绘背景素材不在授权范围内——它们属于各自的画师与角色权利人，仅随 Releases 的安装包提供个人使用，请勿二次分发或商用。
 
