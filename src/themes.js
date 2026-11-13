@@ -76,17 +76,21 @@ const COLOR_THEMES = [
 
 const PHOTO_GROUPS = [
   { prefix: 'congyu', label: '丛雨', count: 20 },
-  { prefix: 'miku', label: '初音未来', count: 4 },
+  { prefix: 'miku', label: '初音未来', count: 9 },
   { prefix: 'snowmiku', label: '雪未来', count: 5 },
   { prefix: 'gancheng', label: '甘城猫猫', count: 17 },
   { prefix: 'gancheng2', label: '猫羽雫', count: 2 },
-  { prefix: 'za', label: '杂', count: 7 },
   { prefix: 'xiaoxue', label: '小雪从小就很可爱', count: 17 },
   { prefix: 'kikyou', label: '桐生桔梗', count: 1 },
   { prefix: 'shiro', label: '白毛合集', count: 4 },
   { prefix: 'fengjin', label: '风堇合集', count: 5 },
-  { prefix: 'other', label: '其他', count: 2 },
-  { prefix: 'futaba', label: '双叶凑音', count: 31 }
+  { prefix: 'futaba', label: '双叶凑音', count: 31 },
+  { prefix: 'missile', label: 'MISSILE228', count: 6 },
+  { prefix: 'unicorn', label: 'Unicorn', count: 1 },
+  { prefix: 'holo', label: 'ホロライブ', count: 3 },
+  { prefix: 'shino', label: '椎野せら', count: 4 },
+  // 原「杂」分组已并入「其他」，未分类素材也放这里
+  { prefix: 'other', label: '其他', count: 12 }
 ]
 
 const PHOTO_THEMES = []

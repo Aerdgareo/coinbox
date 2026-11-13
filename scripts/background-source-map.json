@@ -573,5 +573,150 @@
   "src": "C:/Users/risay/Desktop/shu\\151928382_p0.png",
   "d": 0,
   "margin": 999
+ },
+ "miku-05": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\初音未来\\787153.jpg",
+  "short": 1080,
+  "tier": "direct"
+ },
+ "miku-06": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\初音未来\\9ecb99a2cf18fba198907a79261d5a2d.jpg",
+  "short": 315,
+  "tier": "4x"
+ },
+ "miku-07": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\初音未来\\illustration-long-hair-anime-anime-girls-blue-hair-blue-eyes-Vocaloid-Hatsune-Miku-mythology-screenshot-computer-wallpaper-fictional-character-35306.jpg",
+  "short": 1147,
+  "tier": "direct"
+ },
+ "miku-08": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\初音未来\\m1000x1000.jpg",
+  "short": 1000,
+  "tier": "lanczos"
+ },
+ "miku-09": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\初音未来\\深海少女.jpg",
+  "short": 481,
+  "tier": "4x"
+ },
+ "missile-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\MISSILE228\\005_429077_94141779_p0.jpg",
+  "short": 1302,
+  "tier": "direct"
+ },
+ "missile-02": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\MISSILE228\\017_429077_93131740_p1.jpg",
+  "short": 1302,
+  "tier": "direct"
+ },
+ "missile-03": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\MISSILE228\\023_429077_91019930_p0.jpg",
+  "short": 1302,
+  "tier": "direct"
+ },
+ "missile-04": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\MISSILE228\\045_429077_85995104_p0.jpg",
+  "short": 1158,
+  "tier": "direct"
+ },
+ "missile-05": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\MISSILE228\\050_429077_84227943_p0.jpg",
+  "short": 1320,
+  "tier": "direct"
+ },
+ "missile-06": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\MISSILE228\\062_429077_83708256_p3.jpg",
+  "short": 1262,
+  "tier": "direct"
+ },
+ "unicorn-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\Unicorn\\Unicorn.(Azur.Lane).full.2596012.jpg",
+  "short": 1200,
+  "tier": "direct"
+ },
+ "holo-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\ホロライブ\\00000001.jpg",
+  "short": 1820,
+  "tier": "direct"
+ },
+ "holo-02": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\ホロライブ\\00000007.jpg",
+  "short": 4134,
+  "tier": "direct"
+ },
+ "holo-03": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\ホロライブ\\00000009.jpg",
+  "short": 2500,
+  "tier": "direct"
+ },
+ "shino-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\椎野せら\\1.png",
+  "short": 2093,
+  "tier": "direct"
+ },
+ "shino-02": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\椎野せら\\5.png",
+  "short": 2093,
+  "tier": "direct"
+ },
+ "shino-03": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\椎野せら\\6.png",
+  "short": 2093,
+  "tier": "direct"
+ },
+ "shino-04": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\椎野せら\\7.png",
+  "short": 2093,
+  "tier": "direct"
+ },
+ "other-03": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\1762667900656.png",
+  "short": 1240,
+  "tier": "direct"
+ },
+ "other-04": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\1762667915920.png",
+  "short": 1050,
+  "tier": "lanczos"
+ },
+ "other-05": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\1782399907718.jpg",
+  "short": 1136,
+  "tier": "direct"
+ },
+ "other-06": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\1782400003764.jpg",
+  "short": 1069,
+  "tier": "lanczos"
+ },
+ "other-07": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\@0kizakura.jpg",
+  "short": 659,
+  "tier": "4x"
+ },
+ "other-08": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\IMG_1794223241805.jpg",
+  "short": 1771,
+  "tier": "direct"
+ },
+ "other-09": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\pid：144068201.png",
+  "short": 2160,
+  "tier": "direct"
+ },
+ "other-10": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\2025-05-30-1110902.jpeg",
+  "short": 1013,
+  "tier": "lanczos"
+ },
+ "other-11": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\941038.png",
+  "short": 1125,
+  "tier": "direct"
+ },
+ "other-12": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\Hakurei.Reimu.full.1801219.jpg",
+  "short": 1032,
+  "tier": "lanczos"
  }
 }
