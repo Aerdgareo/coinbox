@@ -72,7 +72,7 @@ function themeSection(s) {
     gridHtml(colorList, s.theme) +
     '<div class="label mt-16">立绘背景 · 按角色分组</div>' +
     photoHtml +
-    '<div class="faint tiny mt-12" style="line-height:1.6">配色主题是纯配色 + 光效背景；立绘背景会把角色图铺满整页，点分组标题展开。没有素材的分类显示「敬请期待」。</div>' +
+    '<div class="faint tiny mt-12" style="line-height:1.6">配色主题是纯配色 + 光效背景；立绘背景会把角色图铺满整页，点分组标题展开。</div>' +
     '</div>'
   )
 }
@@ -84,7 +84,7 @@ function gridHtml(list, current) {
     const on = current === t.id
     const pending = !!t.pending
     const bg = t.bgImage
-      ? 'background:linear-gradient(rgba(6,8,14,0.28),rgba(6,8,14,0.55)),url("' + t.bgImage + '") center/cover;'
+      ? 'background:linear-gradient(rgba(6,8,14,0.28),rgba(6,8,14,0.55)),url(&quot;' + t.bgImage + '&quot;) center 18%/cover;'
       : 'background:' + t.preview + ';'
     html +=
       '<div class="theme-card' + (on ? ' active' : '') + (pending ? ' pending' : '') + '">' +
@@ -302,7 +302,7 @@ function aboutSection() {
     '<div class="faint tiny" style="line-height:1.85">' +
     '丛雨（《千恋＊万花》）、雪未来 2017、甘城なつき / 猫羽雫 的立绘素材来自 B 站公开分享，' +
     '存档页面：《丛雨美图推荐》《小丛雨》《可爱哒初音 雪未来2017篇》。<br>' +
-    '角色与画师版权归原权利人所有；双叶凑音为内置原创风格化绘制。<br>' +
+    '角色与画师版权归原权利人所有；双叶凑音立绘来自 pixiv 公开作品（画师 Sumii 等），版权归原画师所有。<br>' +
     '如果你不希望自己的作品出现在这里，可以联系作者移除。' +
     '</div></div>'
   )

@@ -85,7 +85,8 @@ const PHOTO_GROUPS = [
   { prefix: 'kikyou', label: '桐生桔梗', count: 1 },
   { prefix: 'shiro', label: '白毛合集', count: 4 },
   { prefix: 'fengjin', label: '风堇合集', count: 5 },
-  { prefix: 'other', label: '其他', count: 2 }
+  { prefix: 'other', label: '其他', count: 2 },
+  { prefix: 'futaba', label: '双叶凑音', count: 31 }
 ]
 
 const PHOTO_THEMES = []
@@ -109,23 +110,11 @@ for (let gi = 0; gi < PHOTO_GROUPS.length; gi++) {
   }
 }
 
-PHOTO_THEMES.push({
-  id: 'photo-futaba-pending',
-  group: 'photo',
-  groupName: '双叶凑音',
-  name: '双叶凑音',
-  sub: '立绘背景',
-  pending: true,
-  accent: '#6f9bff',
-  accent2: '#aec9ff',
-  preview: 'linear-gradient(145deg,#070c18 0%,#101c3a 100%)'
-})
-
 export const THEMES = COLOR_THEMES.concat(PHOTO_THEMES)
 
 export const PHOTO_GROUP_NAMES = PHOTO_GROUPS.map(function (g) {
   return g.label
-}).concat(['双叶凑音'])
+})
 
 export const BACKGROUND_MODES = [
   { id: 'theme', name: '跟随主题' },

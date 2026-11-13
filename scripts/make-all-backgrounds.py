@@ -8,10 +8,6 @@ OUT = r"D:\ICT\coinbox\public\backgrounds"
 COLORS_OUT = r"D:\ICT\coinbox\src\bg-colors.js"
 TW, TH = 720, 1280
 
-for f in os.listdir(OUT):
-    if f.endswith(".webp"):
-        os.remove(os.path.join(OUT, f))
-
 GROUPS = [
     ("丛雨", "congyu", "丛雨", None),
     ("初音未来", "miku", "【miku】初音未来～（32）", None),
@@ -23,6 +19,7 @@ GROUPS = [
     ("桐生桔梗", "kikyou", "【桐生桔梗】猜猜我尾巴到哪了~（12）", None),
     ("白毛合集", "shiro", "【白毛合集】别进来，会被电的！（16）", None),
     ("风堇合集", "fengjin", "【风堇合集】这也是治疗的一部分喔~（15）", None),
+    ("双叶凑音", "futaba", "双葉湊音", None),
 ]
 
 # 根目录只保留用户指定的这 2 张
@@ -96,9 +93,27 @@ colors = {}
 
 def emit(path, key):
     im = Image.open(path).convert("RGB")
-    compose_bg(im).save(os.path.join(OUT, key + ".webp"), "WEBP", quality=82, method=6)
+    out = os.path.join(OUT, key + ".webp")
+    # 已生成过的图不重复压缩，只补算主色
+    if not os.path.exists(out):
+        compose_bg(im).save(out, "WEBP", quality=82, method=6)
     a1, a2 = accent_colors(path)
     colors[key] = [a1, a2]
+
+
+def collect(d):
+    """收集目录下图片，并向下多扫一层子目录（如画师作品子文件夹）。"""
+    files = []
+    for fn in sorted(os.listdir(d)):
+        p = os.path.join(d, fn)
+        if os.path.isfile(p) and fn.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+            files.append(p)
+        elif os.path.isdir(p):
+            for sub in sorted(os.listdir(p)):
+                q = os.path.join(p, sub)
+                if os.path.isfile(q) and sub.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+                    files.append(q)
+    return files
 
 
 for label, prefix, rel, _ in GROUPS:
@@ -106,15 +121,13 @@ for label, prefix, rel, _ in GROUPS:
     if not os.path.isdir(d):
         print("skip", label)
         continue
-    files = sorted(
-        f for f in os.listdir(d)
-        if os.path.isfile(os.path.join(d, f)) and f.lower().endswith((".png", ".jpg", ".jpeg", ".webp"))
-    )
+    files = collect(d)
     idx = 0
-    for fn in files:
+    for p in files:
         try:
-            emit(os.path.join(d, fn), "%s-%02d" % (prefix, idx + 1))
-        except Exception:
+            emit(p, "%s-%02d" % (prefix, idx + 1))
+        except Exception as e:
+            print("  fail", os.path.basename(p), e)
             continue
         idx += 1
     print("%-10s %-8s %d" % (label, prefix, idx))
