@@ -552,20 +552,6 @@ body[data-theme="default"] .bg-deco .deco {
   padding: 8px 0 4px;
 }
 
-.gacha-stage::after {
-  content: "";
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  width: 128px;
-  height: 16px;
-  margin-left: -64px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.5) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
 .gacha-stage {
   position: relative;
   width: 190px;
@@ -616,9 +602,14 @@ body[data-theme="default"] .bg-deco .deco {
   bottom: 0;
   height: 94px;
   border-radius: 10px 10px 16px 16px;
-  background: linear-gradient(160deg, #2c2f52, #191c33 70%);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.14), 0 18px 30px rgba(0, 0, 0, 0.42);
+  background:
+    linear-gradient(112deg, rgba(255, 255, 255, 0) 24%, rgba(255, 255, 255, 0.2) 30%, rgba(255, 255, 255, 0.2) 34%, rgba(255, 255, 255, 0) 41%),
+    linear-gradient(160deg, #343a67 0%, #1e2240 55%, #12152a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -16px 26px rgba(0, 0, 0, 0.3),
+    0 18px 30px rgba(0, 0, 0, 0.46);
   overflow: hidden;
 }
 
@@ -629,8 +620,17 @@ body[data-theme="default"] .bg-deco .deco {
   right: 0;
   top: 0;
   bottom: 0;
-  background: linear-gradient(90deg, transparent 42%, var(--accent) 42%, var(--accent) 58%, transparent 58%);
-  opacity: 0.85;
+  background: linear-gradient(
+    90deg,
+    transparent 42%,
+    rgba(255, 255, 255, 0.55) 42%,
+    var(--accent-2) 46%,
+    var(--accent) 52%,
+    var(--accent) 55%,
+    rgba(0, 0, 0, 0.22) 58%,
+    transparent 58%
+  );
+  opacity: 0.92;
 }
 
 .box-body::after {
@@ -638,10 +638,9 @@ body[data-theme="default"] .bg-deco .deco {
   position: absolute;
   left: 0;
   right: 0;
-  top: 50%;
-  height: 14px;
-  margin-top: -7px;
-  background: rgba(0, 0, 0, 0.18);
+  top: 0;
+  height: 20px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.34), rgba(0, 0, 0, 0));
 }
 
 .box-lid {
@@ -651,9 +650,15 @@ body[data-theme="default"] .bg-deco .deco {
   top: 0;
   height: 38px;
   border-radius: 12px 12px 6px 6px;
-  background: linear-gradient(160deg, #3a3e6b, #20233d);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.2), 0 6px 12px rgba(0, 0, 0, 0.35);
+  background:
+    linear-gradient(112deg, rgba(255, 255, 255, 0) 22%, rgba(255, 255, 255, 0.34) 29%, rgba(255, 255, 255, 0.34) 33%, rgba(255, 255, 255, 0) 40%),
+    radial-gradient(60% 100% at 18% -40%, rgba(255, 255, 255, 0.3), transparent 58%),
+    linear-gradient(160deg, #474c7e 0%, #262a4c 62%, #181b32 100%);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.34),
+    inset 0 -8px 14px rgba(0, 0, 0, 0.24),
+    0 6px 14px rgba(0, 0, 0, 0.4);
   transform-origin: 50% 100%;
   transition: transform 0.55s var(--ease), opacity 0.5s;
   z-index: 2;
@@ -667,19 +672,22 @@ body[data-theme="default"] .bg-deco .deco {
   bottom: 0;
   width: 26px;
   margin-left: -13px;
-  background: linear-gradient(180deg, var(--accent-2), var(--accent));
-  opacity: 0.92;
-  box-shadow: 0 0 10px var(--accent-glow);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 34%, rgba(0, 0, 0, 0.16) 100%),
+    linear-gradient(180deg, var(--accent-2), var(--accent));
+  opacity: 0.95;
+  box-shadow: 0 0 12px var(--accent-glow);
 }
 
 .box-shine {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 14px;
-  height: 3px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.12);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 94px;
+  border-radius: 10px 10px 16px 16px;
+  background: linear-gradient(0deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 34%);
+  pointer-events: none;
   z-index: 1;
 }
 
