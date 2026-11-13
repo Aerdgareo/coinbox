@@ -42,7 +42,7 @@ android/                   Capacitor Android 工程
 每天 0 点，按设置的范围生成 8 档奖金：
 
 - 金额在 `[最低, 最高]` 之间按几何级数分布（默认 1、2、3.5、7、14、27、52、100 元）
-- 基础概率约 20% → 4% 递减，另有 10%~30% 的「谢谢参与」
+- 基础概率约 20% → 4% 递减，另有 10%~30% 的「安慰奖」（0.1 元）
 - 目标进度越高，后 4 档概率按进度再降
 - 同一个目标同一天结果固定（日期 + 目标 ID 播种），跨日刷新
 - 中奖金额按子目标优先级分配：P1 先填满，再 P2，其余进大目标
@@ -96,7 +96,7 @@ cd android && ./gradlew assembleDebug
 
 1. 打开「适用于 Android 的 Windows 子系统设置 → 开发人员模式」
 2. `adb connect 127.0.0.1:58526`
-3. `adb install -r release/CoinBox-1.0.0-Android.apk`
+3. `adb install -r release/CoinBox-1.0.1-Android.apk`
 
 开了开发人员模式仍被拒，重启一次 WSA 再连。
 

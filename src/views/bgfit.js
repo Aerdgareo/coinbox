@@ -1,4 +1,5 @@
-import { getState, updateSettings } from '../state.js'
+import { getState, getBgImage, updateSettings } from '../state.js'
+import { getTheme } from '../themes.js'
 import { openSheet } from '../ui.js'
 
 // 背景显示方式：决定立绘 / 自定义图片在屏幕上怎么铺
@@ -18,7 +19,12 @@ export function fitName(id) {
 }
 
 function hasImageBg(s) {
-  return s.bgMode === 'image' || (s.bgMode === 'theme' && s.theme !== 'default')
+  if (s.bgMode === 'image') return !!getBgImage()
+  if (s.bgMode === 'theme') {
+    const t = getTheme(s.theme)
+    return !!(t && t.bgImage)
+  }
+  return false
 }
 
 function optionsHtml(cur) {

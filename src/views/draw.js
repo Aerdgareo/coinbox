@@ -46,7 +46,7 @@ function playWin(kind) {
   } else if (kind === 'mid') {
     tone(620, 0, 0.16, 0.08)
     tone(930, 0.13, 0.24, 0.07)
-  } else if (kind === 'small') {
+  } else if (kind === 'small' || kind === 'miss') {
     tone(700, 0, 0.2, 0.07)
   } else {
     tone(300, 0, 0.22, 0.05, 'sine')
@@ -103,6 +103,7 @@ export function openDraw() {
     tierRow(tiers) +
     '<div class="faint tiny mt-8" style="line-height:1.6">' +
     '越大的奖越难抽；目标攒得越多，大奖概率也会再降一点。<br>' +
+    '没抽中档位也有 ¥0.1 安慰奖，不会空手。<br>' +
     '今日还剩 ' + remain + ' / ' + state.settings.dailyDraws + ' 次。' +
     '</div>' +
     '<button class="btn btn-primary btn-block mt-16" id="gacha-go">开 启 盲 盒</button>',
@@ -154,8 +155,8 @@ function showResult(sheet, res, tiers) {
   const pct = Math.min(100, (goal.saved / goal.target) * 100)
   const fill = pct > 0 && pct < 1.5 ? 1.5 : pct
   const rest = Math.max(0, goal.target - goal.saved)
-  const label = res.kind === 'miss' ? '这次没有抽到奖金' : TIER_LABEL[res.kind]
-  const value = res.kind === 'miss' ? '谢谢参与' : '+¥' + fmtMoney(res.amount)
+  const label = TIER_LABEL[res.kind] || '开箱结果'
+  const value = '+¥' + fmtMoney(res.amount)
   const achievements = res.achievements || []
 
   let achHtml = ''
@@ -174,11 +175,9 @@ function showResult(sheet, res, tiers) {
     '<button class="sheet-close" data-sheet-close>✕</button></div>' +
     '<div class="result">' +
     '<div class="result-label">' + label + '</div>' +
-    '<div class="result-value' + (res.kind === 'miss' ? ' zero' : '') + '">' + value + '</div>' +
+    '<div class="result-value' + (res.amount < 1 ? ' zero' : '') + '">' + value + '</div>' +
     '<div class="result-note">' +
-    (res.kind === 'miss'
-      ? '没关系，明天还有一次机会'
-      : '已加进「' + escapeHtml(goal.name) + '」' + (rest > 0 ? ' · 还差 ¥' + fmtMoney(rest) : ' · 已经达成啦')) +
+    '已加进「' + escapeHtml(goal.name) + '」' + (rest > 0 ? ' · 还差 ¥' + fmtMoney(rest) : ' · 已经达成啦') +
     '</div>' +
     achHtml +
     '</div>' +

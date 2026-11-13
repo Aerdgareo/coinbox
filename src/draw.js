@@ -6,7 +6,8 @@
  * 2. 金额越大，中奖概率越小；
  * 3. 目标攒得越多（进度越高），大额档概率进一步下降；
  * 4. 默认范围 1~100 元，可在设置里调整；
- * 5. 同一天同一目标结果恒定（按 日期+目标ID 播种），跨日刷新。
+ * 5. 没抽中任何档位时给 0.1 元「安慰奖」，不空手；
+ * 6. 同一天同一目标结果恒定（按 日期+目标ID 播种），跨日刷新。
  */
 
 export function clamp(n, min, max) {
@@ -55,8 +56,11 @@ export const TIER_LABEL = {
   t6: '大奖+',
   t7: '超大',
   t8: '超大+',
-  miss: '再接再厉'
+  miss: '安慰奖'
 }
+
+/** 没抽中任何档位时的保底金额（元） */
+export const MISS_AMOUNT = 0.1
 
 const WEIGHTS = [20, 17, 14, 12, 9, 7, 5, 4]
 
@@ -127,7 +131,7 @@ export function generateTiers(goal, dateStr, range) {
     progress: Math.round(progress * 1000) / 1000,
     min: min,
     max: max,
-    miss: { amount: 0, chance: chances.miss }
+    miss: { amount: MISS_AMOUNT, chance: chances.miss }
   }
   for (let i = 0; i < TIER_KEYS.length; i++) {
     const k = TIER_KEYS[i]

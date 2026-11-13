@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0e1020">
   <meta name="format-detection" content="telephone=no">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' ws: http://localhost:5173; font-src 'self' data:">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' ws: http://localhost:5173 https:; font-src 'self' data:">
   <title>攒钱盲盒</title>
   <link rel="stylesheet" href="./src/styles/base.css">
   <link rel="stylesheet" href="./src/styles/themes.css">
@@ -14,6 +14,7 @@
   <div id="app">
     <div class="bg-fill" id="bgFill" aria-hidden="true"></div>
     <div class="bg-base" id="bgBase"></div>
+    <div class="bg-veil" id="bgVeil" aria-hidden="true"></div>
     <canvas class="bg-particles" id="particles"></canvas>
     <div class="bg-deco" aria-hidden="true">
       <i class="deco deco-a"></i>

@@ -117,6 +117,7 @@ export function applyBackground(s, theme) {
   const bg = document.getElementById('bgBase')
   if (!bg) return
   const fill = document.getElementById('bgFill')
+  const veil = document.getElementById('bgVeil')
   bg.classList.remove('has-image')
   bg.style.backgroundColor = ''
   bg.style.backgroundImage = ''
@@ -124,14 +125,21 @@ export function applyBackground(s, theme) {
     fill.style.backgroundImage = ''
     fill.classList.remove('on')
   }
+  if (veil) {
+    veil.style.backgroundImage = ''
+    veil.classList.remove('on')
+  }
 
   if (s.bgMode === 'image') {
     const img = getBgImage()
     if (img) {
       bg.classList.add('has-image')
-      bg.style.backgroundImage =
-        'linear-gradient(rgba(6,7,14,0.52),rgba(6,7,14,0.66)),url("' + img + '")'
+      bg.style.backgroundImage = 'url("' + img + '")'
       bg.style.backgroundColor = '#05060c'
+      if (veil) {
+        veil.style.backgroundImage = 'linear-gradient(rgba(6,7,14,0.52),rgba(6,7,14,0.66))'
+        veil.classList.add('on')
+      }
       if (fill) fill.style.backgroundImage = 'url("' + img + '")'
       applyFit(bg, fill, s.bgFit)
       return
@@ -140,9 +148,13 @@ export function applyBackground(s, theme) {
 
   if (s.bgMode === 'theme' && theme && theme.bgImage) {
     bg.classList.add('has-image')
-    bg.style.backgroundImage =
-      'linear-gradient(180deg,rgba(4,6,12,0.52) 0%,rgba(4,6,12,0.68) 45%,rgba(4,6,12,0.84) 100%),url("' + theme.bgImage + '")'
+    bg.style.backgroundImage = 'url("' + theme.bgImage + '")'
     bg.style.backgroundColor = '#05060c'
+    if (veil) {
+      veil.style.backgroundImage =
+        'linear-gradient(180deg,rgba(4,6,12,0.52) 0%,rgba(4,6,12,0.68) 45%,rgba(4,6,12,0.84) 100%)'
+      veil.classList.add('on')
+    }
     if (fill) fill.style.backgroundImage = 'url("' + theme.bgImage + '")'
     applyFit(bg, fill, s.bgFit)
     return

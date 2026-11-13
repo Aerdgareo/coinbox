@@ -101,6 +101,26 @@ input {
   background-color: #05060c;
 }
 
+/* 背景压暗层：单独一层，隐藏界面时淡出，露出原图本来的颜色 */
+.bg-veil {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s var(--ease);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.bg-veil.on {
+  opacity: 1;
+}
+
 .bg-particles {
   position: fixed;
   top: 0;
@@ -1039,6 +1059,54 @@ textarea.input {
   box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
+/* 自定义颜色块：取色器本体 + 右下角「＋」角标，避免用户不知道能点 */
+.swatch.sw-custom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: visible;
+}
+
+.swatch.sw-custom input[type="color"] {
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  display: block;
+}
+
+.swatch.sw-custom .sw-plus {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  line-height: 15px;
+  text-align: center;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.sw-tip {
+  margin-top: 9px;
+  font-size: 10.5px;
+  color: var(--text-faint);
+  line-height: 1.5;
+}
+
+/* 自动合计的金额框：只读，弱化显示 */
+.input[readonly] {
+  opacity: 0.66;
+}
+
 /* ---------- 主题卡片 ---------- */
 .theme-grid {
   display: flex;
@@ -1763,6 +1831,15 @@ body.hide-ui .tabbar {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s var(--ease);
+}
+
+/* 只剩背景时去掉压暗层，否则立绘会灰蒙蒙一片 */
+body.hide-ui .bg-veil.on {
+  opacity: 0;
+}
+
+body.hide-ui .bg-fill {
+  filter: blur(26px) saturate(1.2) brightness(0.9);
 }
 
 body.hide-ui .hide-ui-btn {

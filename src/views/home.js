@@ -120,7 +120,7 @@ function drawCard(state) {
           return tierCell(TIER_LABEL[k], tiers[k], '')
         }).join('') +
         '</div>' +
-        '<div class="faint tiny mt-12">金额越大，抽中的概率越小；攒得越多，大奖概率越低。0 点刷新。</div>'
+        '<div class="faint tiny mt-12">金额越大，抽中的概率越小；攒得越多，大奖概率越低。没中也有 ¥0.1 安慰奖，0 点刷新。</div>'
       : '') +
     '</div>'
   )

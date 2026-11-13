@@ -1,4 +1,4 @@
-import { getState, createGoal, updateGoal, deleteGoal, findGoal } from '../state.js'
+import { getState, createGoal, updateGoal, deleteGoal, findGoal, childTargetSum } from '../state.js'
 import { fmtMoney, escapeHtml, openSheet, closeSheet, toast, confirmDialog } from '../ui.js'
 
 const EMOJIS = ['💻', '📱', '🎧', '🎮', '⌨️', '🖥️', '📷', '🎨', '🎸', '🛹', '🚲', '✈️', '🎁', '🎯', '☕', '🐱']
@@ -26,7 +26,8 @@ export function openGoalEditor(goalId) {
     }).join('') +
     '</div></div>' +
     '<div class="field"><div class="label">目标金额（元）</div>' +
-    '<input class="input" id="g-target" type="number" inputmode="decimal" min="1" step="1" value="' + g.target + '"></div>' +
+    '<input class="input" id="g-target" type="number" inputmode="decimal" min="1" step="1" value="' + g.target + '">' +
+    '<div class="faint tiny mt-8" id="g-target-note" style="line-height:1.6"></div></div>' +
     (isEdit
       ? '<div class="field"><div class="label">已存金额（元）</div>' +
         '<input class="input" id="g-saved" type="number" inputmode="decimal" min="0" step="0.01" value="' + g.saved + '"></div>'
@@ -60,10 +61,30 @@ export function openGoalEditor(goalId) {
   })
   paint()
 
+  const targetInput = sheet.querySelector('#g-target')
+  const targetNote = sheet.querySelector('#g-target-note')
+
+  // 有子目标时，大目标金额恒等于子目标金额之和，只读展示
+  function syncTargetInput() {
+    const hasKids = children.length > 0
+    if (hasKids) {
+      const sum = childTargetSum(children)
+      targetInput.value = String(sum)
+      targetInput.readOnly = true
+      targetInput.style.opacity = '0.66'
+      targetNote.textContent = '已按子目标合计：¥' + fmtMoney(sum) + ' = 各子目标金额之和'
+    } else {
+      targetInput.readOnly = false
+      targetInput.style.opacity = ''
+      targetNote.textContent = '添加子目标后，这里会自动变成子目标金额之和。'
+    }
+  }
+
   function renderChildren() {
     const box = sheet.querySelector('#child-list')
     if (!children.length) {
       box.innerHTML = '<div class="faint tiny" style="padding:6px 2px">还没有子目标，可以在大目标下拆出配件</div>'
+      syncTargetInput()
       return
     }
     let html = ''
@@ -90,6 +111,7 @@ export function openGoalEditor(goalId) {
       })
       row.querySelector('[data-ctarget]').addEventListener('input', function (e) {
         children[idx].target = Math.max(1, Number(e.target.value) || 1)
+        syncTargetInput()
       })
       row.querySelector('[data-cpriority]').addEventListener('input', function (e) {
         children[idx].priority = Math.max(1, Number(e.target.value) || 1)
@@ -99,6 +121,7 @@ export function openGoalEditor(goalId) {
         renderChildren()
       })
     })
+    syncTargetInput()
   }
   renderChildren()
 
@@ -109,7 +132,7 @@ export function openGoalEditor(goalId) {
 
   sheet.querySelector('#g-submit').addEventListener('click', function () {
     const name = sheet.querySelector('#g-name').value.trim()
-    const target = Number(sheet.querySelector('#g-target').value)
+    const target = children.length ? childTargetSum(children) : Number(sheet.querySelector('#g-target').value)
     if (!name) { toast('给目标起个名字吧'); return }
     if (!target || target <= 0) { toast('目标金额要大于 0'); return }
 

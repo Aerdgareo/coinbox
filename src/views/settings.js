@@ -12,11 +12,13 @@ import {
   importData,
   resetAll
 } from '../state.js'
-import { THEMES, BACKGROUND_MODES, PHOTO_GROUP_NAMES, PHOTO_TINTS } from '../themes.js'
+import { THEMES, BACKGROUND_MODES, PHOTO_GROUP_NAMES, PHOTO_TINTS, getTheme } from '../themes.js'
 import { fmtMoney, escapeHtml, openSheet, closeSheet, toast, confirmDialog } from '../ui.js'
 import { lighten, darken } from '../appearance.js'
 import { openGoalEditor } from './goalEditor.js'
 import { openBgFitSheet, fitName } from './bgfit.js'
+import { APP_VERSION, REPO_URL, RELEASES_URL } from '../version.js'
+import { checkLatestRelease, compareVersions, openExternal } from '../updater.js'
 
 export function renderSettings(el) {
   const state = getState()
@@ -138,17 +140,20 @@ function accentSection(s) {
     '<span class="faint tiny">只作用于「素色」</span></div>' +
     '<div class="label">主色</div>' +
     '<div class="swatches" style="align-items:center">' + sw +
-    '<label class="swatch" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);overflow:hidden">' +
-    '<input type="color" id="accent-custom" value="' + s.accent + '" style="width:46px;height:46px;border:0;background:none;padding:0;margin:-6px">' +
+    '<label class="swatch sw-custom" title="自定义主色">' +
+    '<input type="color" id="accent-custom" value="' + s.accent + '" aria-label="自定义主色">' +
+    '<span class="sw-plus">＋</span>' +
     '</label></div>' +
+    '<div class="sw-tip">带 ＋ 的色块可以自选颜色</div>' +
     '<div class="label mt-16">底色</div>' +
     '<div class="swatches" style="align-items:center">' +
     ['#0b0d18', '#101426', '#12161c', '#161016', '#0d1418'].map(function (c) {
       const on = String(s.bgTint).toLowerCase() === c
       return '<button class="swatch' + (on ? ' active' : '') + '" data-tint="' + c + '" style="background:linear-gradient(145deg,' + c + ',' + lighten(c, 0.22) + ')"></button>'
     }).join('') +
-    '<label class="swatch" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);overflow:hidden">' +
-    '<input type="color" id="tint-custom" value="' + s.bgTint + '" style="width:46px;height:46px;border:0;background:none;padding:0;margin:-6px">' +
+    '<label class="swatch sw-custom" title="自定义底色">' +
+    '<input type="color" id="tint-custom" value="' + s.bgTint + '" aria-label="自定义底色">' +
+    '<span class="sw-plus">＋</span>' +
     '</label></div>' +
     '</div>'
   )
@@ -293,11 +298,16 @@ function dataSection() {
 function aboutSection() {
   return (
     '<div class="card card-tight" style="margin-top:14px">' +
-    '<div class="flex-between"><div class="row-title">攒钱盲盒</div><div class="faint tiny">v1.0.0</div></div>' +
+    '<div class="flex-between"><div class="row-title">攒钱盲盒</div><div class="faint tiny">v' + APP_VERSION + '</div></div>' +
     '<div class="faint tiny mt-8" style="line-height:1.7">' +
     '一个纯本地的攒钱小工具：给想要的东西设个目标，每天开一次盲盒，抽到的小奖金会直接加进进度里。<br>' +
-    '不联网、不付款、不收集任何数据。' +
+    '不付款、不收集任何数据。' +
     '</div>' +
+    '<div class="mt-16" style="display:flex">' +
+    '<button class="btn btn-ghost btn-sm" id="btn-check-update" style="flex:1;margin-right:8px">检查更新</button>' +
+    '<button class="btn btn-ghost btn-sm" id="btn-repo" style="flex:1">开源地址</button>' +
+    '</div>' +
+    '<div class="faint tiny mt-8" style="line-height:1.6">github.com/Aerdgareo/coinbox</div>' +
     '<div class="label mt-16">素材与致谢</div>' +
     '<div class="faint tiny" style="line-height:1.85">' +
     '丛雨（《千恋＊万花》）、雪未来 2017、甘城なつき / 猫羽雫 的立绘素材来自 B 站公开分享，' +
@@ -333,7 +343,15 @@ function bind(el) {
 
   el.querySelectorAll('[data-theme-id]').forEach(function (n) {
     n.addEventListener('click', function () {
-      updateSettings({ theme: n.getAttribute('data-theme-id') })
+      const id = n.getAttribute('data-theme-id')
+      const t = getTheme(id)
+      const patch = { theme: id }
+      // 立绘背景：如果当前不在「跟随主题」，点一下自动切回去，否则点了画面没变化
+      if (t && t.bgImage && getState().settings.bgMode !== 'theme') {
+        patch.bgMode = 'theme'
+        toast('已切到「' + t.name + '」立绘背景')
+      }
+      updateSettings(patch)
     })
   })
 
@@ -477,6 +495,50 @@ function bind(el) {
   const imp = el.querySelector('[data-import]')
   if (imp) imp.addEventListener('click', showImport)
 
+  const repoBtn = el.querySelector('#btn-repo')
+  if (repoBtn) {
+    repoBtn.addEventListener('click', function () {
+      openExternal(REPO_URL)
+    })
+  }
+
+  const updBtn = el.querySelector('#btn-check-update')
+  if (updBtn) {
+    updBtn.addEventListener('click', function () {
+      if (updBtn.disabled) return
+      const label = updBtn.textContent
+      updBtn.disabled = true
+      updBtn.textContent = '检查中…'
+
+      function restore() {
+        updBtn.disabled = false
+        updBtn.textContent = label
+      }
+
+      checkLatestRelease().then(function (info) {
+        restore()
+        if (!info.latest) {
+          toast('没读到版本号，稍后再试试')
+          return
+        }
+        if (compareVersions(info.latest, APP_VERSION) > 0) {
+          showUpdateResult(info)
+        } else {
+          toast('已是最新版本 v' + APP_VERSION)
+        }
+      }).catch(function (e) {
+        restore()
+        if (e && e.message === 'timeout') {
+          toast('检查超时（8 秒），网络可能不太顺畅', 2400)
+        } else if (e && e.message === 'unsupported') {
+          toast('当前环境不支持联网检查')
+        } else {
+          toast('检查失败，请确认网络后重试', 2400)
+        }
+      })
+    })
+  }
+
   const rst = el.querySelector('[data-reset]')
   if (rst) {
     rst.addEventListener('click', function () {
@@ -488,6 +550,24 @@ function bind(el) {
       })
     })
   }
+}
+
+function showUpdateResult(info) {
+  const sheet = openSheet(
+    '<div class="text-center" style="padding:2px 2px 0">' +
+    '<div class="result-label">发现新版本</div>' +
+    '<div class="result-value">v' + escapeHtml(info.latest) + '</div>' +
+    '<div class="faint tiny mt-8">当前 v' + APP_VERSION + ' · 来自 GitHub Releases</div>' +
+    '</div>' +
+    '<button class="btn btn-primary btn-block mt-16" id="upd-go">前往下载</button>' +
+    '<button class="btn btn-ghost btn-block mt-12" data-sheet-close>以后再说</button>',
+    { title: '检查更新' }
+  )
+  if (!sheet) return
+  sheet.querySelector('#upd-go').addEventListener('click', function () {
+    openExternal(info.url || RELEASES_URL)
+    closeSheet()
+  })
 }
 
 function showExport() {

@@ -24,6 +24,7 @@ export function escapeHtml(s) {
 export function fmtMoney(n) {
   const v = Math.round(Number(n || 0) * 100) / 100
   if (v >= 10000) return (v / 10000).toFixed(1).replace(/\.0$/, '') + '万'
+  if (v > 0 && v < 1) return String(v)
   if (v % 1 === 0) return String(v)
   return v.toFixed(2)
 }

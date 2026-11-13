@@ -61,6 +61,24 @@ function normalizeChildren(list) {
   return out
 }
 
+/** 子目标金额合计 */
+export function childTargetSum(children) {
+  const arr = Array.isArray(children) ? children : []
+  let sum = 0
+  for (let i = 0; i < arr.length; i++) sum += Math.max(1, Number(arr[i].target) || 1)
+  return Math.round(sum * 100) / 100
+}
+
+/**
+ * 不变式：只要有子目标，大目标金额 = 子目标金额之和。
+ * 避免出现「目标 ¥6999 / 子目标合计 ¥6500」这种对不上的情况。
+ */
+export function syncGoalTarget(g) {
+  if (!g || !Array.isArray(g.children) || !g.children.length) return g
+  g.target = childTargetSum(g.children)
+  return g
+}
+
 function defaultGoal() {
   return {
     id: 'g_default',
@@ -134,6 +152,8 @@ function migrate(raw) {
     }, 0)
     if (g.ownSaved == null) g.ownSaved = Math.max(0, g.saved - childSum)
     g.saved = Math.round((childSum + g.ownSaved) * 100) / 100
+    syncGoalTarget(g)
+    g.doneAt = g.saved >= g.target ? g.doneAt || Date.now() : null
   }
   s.settings.dailyDraws = clamp(Number(s.settings.dailyDraws) || 1, 1, 3)
   s.settings.drawMin = clamp(Number(s.settings.drawMin) || 1, 0.1, 500)
@@ -268,7 +288,7 @@ export function performDraw() {
   const tiers = state.draw.tiers
   const kind = rollTier(tiers)
   const goal = activeGoal()
-  const amount = kind === 'miss' ? 0 : tiers[kind].amount
+  const amount = tiers[kind] ? tiers[kind].amount : 0
   let achievements = []
 
   if (amount > 0) {
@@ -337,6 +357,7 @@ export function createGoal(data) {
     createdAt: Date.now(),
     doneAt: null
   }
+  syncGoalTarget(g)
   if (g.saved >= g.target) g.doneAt = Date.now()
   state.goals.push(g)
   state.activeGoal = g.id
@@ -352,6 +373,8 @@ export function updateGoal(id, data) {
   if (data.emoji) g.emoji = data.emoji
   if (data.target != null) g.target = Math.max(1, Number(data.target) || 1)
   if (Array.isArray(data.children)) g.children = normalizeChildren(data.children)
+  // 有子目标时，金额以子目标合计为准
+  syncGoalTarget(g)
 
   let childSum = 0
   for (let i = 0; i < (g.children || []).length; i++) childSum += g.children[i].saved

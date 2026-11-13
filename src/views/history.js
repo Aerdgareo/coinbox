@@ -28,7 +28,7 @@ export function renderHistory(el) {
         '<div class="row-icon">' + (win ? '🎁' : '·') + '</div>' +
         '<div class="row-text">' +
         '<div class="row-title">' + escapeHtml(h.goalName || '目标') + '</div>' +
-        '<div class="row-sub">' + fmtTime(h.ts) + ' · ' + (TIER_LABEL[h.kind] || '抽奖') + '</div>' +
+        '<div class="row-sub">' + fmtTime(h.ts) + ' · ' + (win ? (TIER_LABEL[h.kind] || '抽奖') : '未中') + '</div>' +
         '</div></div>' +
         '<div class="row-value ' + (win ? 'plus' : 'mute') + '">' +
         (win ? '+¥' + fmtMoney(h.amount) : '未中') +
