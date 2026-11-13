@@ -1,0 +1,577 @@
+{
+ "congyu-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794301881076.jpg",
+  "d": 48.5,
+  "margin": 2469.1
+ },
+ "congyu-02": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794301895409.jpg",
+  "d": 123.3,
+  "margin": 2461.2
+ },
+ "congyu-03": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794301906510.jpg",
+  "d": 139.9,
+  "margin": 6107.6
+ },
+ "congyu-04": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794301914505.jpg",
+  "d": 2986.8,
+  "margin": 42.4
+ },
+ "congyu-05": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794301924365.jpg",
+  "d": 44.0,
+  "margin": 7706.9
+ },
+ "congyu-06": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794301929037.jpg",
+  "d": 701.3,
+  "margin": 6004.3
+ },
+ "congyu-07": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794301941258.jpg",
+  "d": 88.6,
+  "margin": 3854.0
+ },
+ "congyu-08": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794301950416.jpg",
+  "d": 66.3,
+  "margin": 2544.3
+ },
+ "congyu-09": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794301959187.jpg",
+  "d": 434.8,
+  "margin": 3749.9
+ },
+ "congyu-10": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794301968441.jpg",
+  "d": 438.0,
+  "margin": 4187.1
+ },
+ "congyu-11": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794301974733.jpg",
+  "d": 167.3,
+  "margin": 2313.1
+ },
+ "congyu-12": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794301981103.jpg",
+  "d": 162.8,
+  "margin": 2442.0
+ },
+ "congyu-13": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794301988110.jpg",
+  "d": 90.6,
+  "margin": 2375.2
+ },
+ "congyu-14": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794301994891.jpg",
+  "d": 1204.2,
+  "margin": 2225.9
+ },
+ "congyu-15": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794302000180.jpg",
+  "d": 301.5,
+  "margin": 3353.9
+ },
+ "congyu-16": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794302005041.jpg",
+  "d": 68.5,
+  "margin": 2467.6
+ },
+ "congyu-17": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794302015173.jpg",
+  "d": 183.4,
+  "margin": 2389.8
+ },
+ "congyu-18": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794302030600.jpg",
+  "d": 168.5,
+  "margin": 2843.2
+ },
+ "congyu-19": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794302035693.jpg",
+  "d": 53.4,
+  "margin": 7490.4
+ },
+ "congyu-20": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\丛雨\\IMG_1794302056407.jpg",
+  "d": 410.3,
+  "margin": 3071.9
+ },
+ "miku-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\【miku】初音未来～（32）\\pid：122483898.jpg",
+  "d": 136.2,
+  "margin": 7691.3
+ },
+ "miku-02": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\【miku】初音未来～（32）\\pid：134521126.png",
+  "d": 780.1,
+  "margin": 6174.2
+ },
+ "miku-03": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\【miku】初音未来～（32）\\pid：140199729.jpg",
+  "d": 246.6,
+  "margin": 6632.6
+ },
+ "miku-04": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\【miku】初音未来～（32）\\pid：140385748.jpg",
+  "d": 401.2,
+  "margin": 7389.6
+ },
+ "snowmiku-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\雪未来2017\\IMG_1794302539485.jpg",
+  "d": 263.3,
+  "margin": 8564.8
+ },
+ "snowmiku-02": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\雪未来2017\\IMG_1794302545467.png.jpg",
+  "d": 613.3,
+  "margin": 4909.0
+ },
+ "snowmiku-03": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\雪未来2017\\IMG_1794302550843.png.jpg",
+  "d": 275.8,
+  "margin": 6064.4
+ },
+ "snowmiku-04": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\雪未来2017\\IMG_1794302557488.jpg",
+  "d": 578.4,
+  "margin": 5661.4
+ },
+ "snowmiku-05": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\雪未来2017\\IMG_1794302563369.jpg",
+  "d": 211.4,
+  "margin": 5171.8
+ },
+ "gancheng-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\@nyunyu0210.jpg",
+  "d": 142.7,
+  "margin": 2443.0
+ },
+ "gancheng-02": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\@sia_Job00.jpg",
+  "d": 442.8,
+  "margin": 4491.6
+ },
+ "gancheng-03": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\IMG_1794302224676.png.jpg",
+  "d": 24.7,
+  "margin": 2488.7
+ },
+ "gancheng-04": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\IMG_1794302231028.png.jpg",
+  "d": 232.8,
+  "margin": 2950.7
+ },
+ "gancheng-05": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\IMG_1794302333080.png.jpg",
+  "d": 75.7,
+  "margin": 4382.6
+ },
+ "gancheng-06": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\IMG_1794302356460.png.jpg",
+  "d": 98.2,
+  "margin": 5898.4
+ },
+ "gancheng-07": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\IMG_1794302461217.jpg",
+  "d": 223.1,
+  "margin": 2719.6
+ },
+ "gancheng-08": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\IMG_1794302471169.jpg",
+  "d": 97.7,
+  "margin": 2839.0
+ },
+ "gancheng-09": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\pid：105630316.jpg",
+  "d": 152.6,
+  "margin": 2510.3
+ },
+ "gancheng-10": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\pid：112838277.png",
+  "d": 180.6,
+  "margin": 1840.9
+ },
+ "gancheng-11": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\pid：114536333.png",
+  "d": 97.8,
+  "margin": 2210.8
+ },
+ "gancheng-12": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\pid：138759026.png",
+  "d": 307.4,
+  "margin": 1582.9
+ },
+ "gancheng-13": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\pid：138759026（2）.png",
+  "d": 246.5,
+  "margin": 3060.0
+ },
+ "gancheng-14": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\pid：138759026（3）.png",
+  "d": 494.9,
+  "margin": 3699.7
+ },
+ "gancheng-15": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\pid：140233796.jpg",
+  "d": 78.7,
+  "margin": 2942.9
+ },
+ "gancheng-16": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\pid：147842497.png",
+  "d": 46.9,
+  "margin": 7450.0
+ },
+ "gancheng-17": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\pid；143138249.png",
+  "d": 485.5,
+  "margin": 5478.4
+ },
+ "gancheng2-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\猫羽雫\\IMG_1794302201107.png.jpg",
+  "d": 530.4,
+  "margin": 8439.8
+ },
+ "gancheng2-02": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\甘城なつき\\猫羽雫\\IMG_1794302206940.png.jpg",
+  "d": 253.1,
+  "margin": 8457.2
+ },
+ "za-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\1762667900656.png",
+  "d": 151.4,
+  "margin": 3442.6
+ },
+ "za-02": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\1762667915920.png",
+  "d": 185.7,
+  "margin": 4598.1
+ },
+ "za-03": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\1782399907718.jpg",
+  "d": 245.1,
+  "margin": 4467.3
+ },
+ "za-04": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\1782400003764.jpg",
+  "d": 252.4,
+  "margin": 3259.6
+ },
+ "za-05": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\@0kizakura.jpg",
+  "d": 1195.5,
+  "margin": 1317.7
+ },
+ "za-06": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\IMG_1794223241805.jpg",
+  "d": 41.6,
+  "margin": 5477.9
+ },
+ "za-07": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\pid：144068201.png",
+  "d": 106.5,
+  "margin": 3367.4
+ },
+ "xiaoxue-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229471789.png",
+  "d": 45.5,
+  "margin": 4111.7
+ },
+ "xiaoxue-02": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229483748.png",
+  "d": 78.0,
+  "margin": 2176.2
+ },
+ "xiaoxue-03": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229495535.png",
+  "d": 69.8,
+  "margin": 3915.6
+ },
+ "xiaoxue-04": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229506557.png",
+  "d": 99.6,
+  "margin": 2172.6
+ },
+ "xiaoxue-05": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229524768.png",
+  "d": 161.4,
+  "margin": 5274.4
+ },
+ "xiaoxue-06": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229549824.png",
+  "d": 31.9,
+  "margin": 4133.1
+ },
+ "xiaoxue-07": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229552640.png",
+  "d": 102.3,
+  "margin": 2741.5
+ },
+ "xiaoxue-08": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229558295.png",
+  "d": 122.3,
+  "margin": 5233.2
+ },
+ "xiaoxue-09": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229562231.png",
+  "d": 91.9,
+  "margin": 2470.8
+ },
+ "xiaoxue-10": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229623967.png",
+  "d": 90.5,
+  "margin": 2945.5
+ },
+ "xiaoxue-11": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229627983.png",
+  "d": 70.6,
+  "margin": 2466.5
+ },
+ "xiaoxue-12": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229684454.png",
+  "d": 86.9,
+  "margin": 3357.8
+ },
+ "xiaoxue-13": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229704249.png",
+  "d": 62.5,
+  "margin": 2492.0
+ },
+ "xiaoxue-14": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229738272.png",
+  "d": 332.8,
+  "margin": 4438.8
+ },
+ "xiaoxue-15": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229746699.png",
+  "d": 39.5,
+  "margin": 3920.9
+ },
+ "xiaoxue-16": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229753633.png",
+  "d": 115.6,
+  "margin": 4243.3
+ },
+ "xiaoxue-17": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\杂\\小雪从小就很可爱\\1766229774930.png",
+  "d": 149.8,
+  "margin": 3543.6
+ },
+ "kikyou-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\【桐生桔梗】猜猜我尾巴到哪了~（12）\\pid：124913538.jpg",
+  "d": 145.1,
+  "margin": 999
+ },
+ "shiro-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\【白毛合集】别进来，会被电的！（16）\\@Yuel_1011.jpg",
+  "d": 117.5,
+  "margin": 6793.7
+ },
+ "shiro-02": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\【白毛合集】别进来，会被电的！（16）\\@cu__cu__cu.jpg",
+  "d": 215.9,
+  "margin": 3762.7
+ },
+ "shiro-03": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\【白毛合集】别进来，会被电的！（16）\\@yatani_row.jpg",
+  "d": 527.8,
+  "margin": 6749.9
+ },
+ "shiro-04": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\【白毛合集】别进来，会被电的！（16）\\@yugina08.jpg",
+  "d": 293.5,
+  "margin": 3632.7
+ },
+ "fengjin-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\【风堇合集】这也是治疗的一部分喔~（15）\\pid：132838505.jpg",
+  "d": 220.5,
+  "margin": 2861.6
+ },
+ "fengjin-02": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\【风堇合集】这也是治疗的一部分喔~（15）\\pid：133242397.png",
+  "d": 139.2,
+  "margin": 2630.8
+ },
+ "fengjin-03": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\【风堇合集】这也是治疗的一部分喔~（15）\\pid：138027184.jpg",
+  "d": 358.8,
+  "margin": 2359.5
+ },
+ "fengjin-04": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\【风堇合集】这也是治疗的一部分喔~（15）\\pid：138499997.png",
+  "d": 592.9,
+  "margin": 2593.7
+ },
+ "fengjin-05": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\【风堇合集】这也是治疗的一部分喔~（15）\\pid：138901539.jpg",
+  "d": 214.6,
+  "margin": 3878.5
+ },
+ "futaba-01": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\119746866_p0.png",
+  "d": 317.6,
+  "margin": 5316.2
+ },
+ "futaba-02": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\123297301_p0.png",
+  "d": 92.1,
+  "margin": 4929.2
+ },
+ "futaba-03": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\123340101_p0.jpg",
+  "d": 286.4,
+  "margin": 0.1
+ },
+ "futaba-04": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\123340101_p1.jpg",
+  "d": 285.9,
+  "margin": 0.6
+ },
+ "futaba-05": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\123690762_p0.png",
+  "d": 131.9,
+  "margin": 25.1
+ },
+ "futaba-06": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\123690762_p1.png",
+  "d": 131.7,
+  "margin": 15.9
+ },
+ "futaba-07": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\126833164_p0.png",
+  "d": 169.8,
+  "margin": 6334.0
+ },
+ "futaba-08": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\127357292_p0.png",
+  "d": 258.2,
+  "margin": 4153.4
+ },
+ "futaba-09": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\131287000_p0.png",
+  "d": 248.7,
+  "margin": 5983.0
+ },
+ "futaba-10": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\131541128_p0.jpg",
+  "d": 301.8,
+  "margin": 4919.0
+ },
+ "futaba-11": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\131797146_p0.png",
+  "d": 155.0,
+  "margin": 4291.6
+ },
+ "futaba-12": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\134107875_p0.png",
+  "d": 435.3,
+  "margin": 4995.9
+ },
+ "futaba-13": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\136712601_p1.png",
+  "d": 27.6,
+  "margin": 5913.3
+ },
+ "futaba-14": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\136891757_p0.jpg",
+  "d": 172.0,
+  "margin": 5010.3
+ },
+ "futaba-15": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\140695716_p0.png",
+  "d": 167.2,
+  "margin": 6623.4
+ },
+ "futaba-16": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\140696745_p9.jpg",
+  "d": 262.3,
+  "margin": 5209.3
+ },
+ "futaba-17": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\142311952_p4.png",
+  "d": 452.3,
+  "margin": 3596.8
+ },
+ "futaba-18": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\148906608_p0.png",
+  "d": 294.5,
+  "margin": 5807.2
+ },
+ "futaba-19": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\149447206_p0.png",
+  "d": 162.7,
+  "margin": 6028.4
+ },
+ "futaba-20": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\151419917_p0.png",
+  "d": 400.0,
+  "margin": 5244.8
+ },
+ "futaba-21": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\151552962_p0.png",
+  "d": 255.6,
+  "margin": 5461.3
+ },
+ "futaba-22": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\151815235_p11.jpg",
+  "d": 277.8,
+  "margin": 6512.6
+ },
+ "futaba-23": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\151954125_p0.jpg",
+  "d": 290.9,
+  "margin": 5975.6
+ },
+ "futaba-24": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\Sumii pid1049371\\124691508_p0.png",
+  "d": 245.4,
+  "margin": 2078.3
+ },
+ "futaba-25": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\Sumii pid1049371\\127697010-015e6c63a4c9e09f635bb9f334659ee9_p0.png",
+  "d": 164.0,
+  "margin": 1132.9
+ },
+ "futaba-26": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\Sumii pid1049371\\128674958_p0.png",
+  "d": 262.9,
+  "margin": 2307.2
+ },
+ "futaba-27": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\Sumii pid1049371\\132045136_p0.png",
+  "d": 181.9,
+  "margin": 1183.4
+ },
+ "futaba-28": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\Sumii pid1049371\\135953706_p0.png",
+  "d": 118.5,
+  "margin": 1171.7
+ },
+ "futaba-29": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\Sumii pid1049371\\137967018_p0.png",
+  "d": 189.7,
+  "margin": 3147.3
+ },
+ "futaba-30": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\Sumii pid1049371\\145290315_p0.png",
+  "d": 155.5,
+  "margin": 2345.2
+ },
+ "futaba-31": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\双葉湊音\\yume_nekopid2799960.png",
+  "d": 295.6,
+  "margin": 2955.9
+ },
+ "other-01": {
+  "src": "C:/Users/risay/Desktop/shu\\151348352_p0.jpg",
+  "d": 0,
+  "margin": 999
+ },
+ "other-02": {
+  "src": "C:/Users/risay/Desktop/shu\\151928382_p0.png",
+  "d": 0,
+  "margin": 999
+ }
+}

@@ -206,11 +206,35 @@ function backgroundSection(s) {
   )
 }
 
+const FX_LIST = [
+  { id: 'none', name: '无', ico: '∅' },
+  { id: 'snow', name: '下雪', ico: '❄' },
+  { id: 'stars', name: '群星', ico: '✦' },
+  { id: 'notes', name: '音符', ico: '♪' },
+  { id: 'sakura', name: '樱花', ico: '❀' }
+]
+
 function effectSection(s) {
+  let fx = ''
+  for (let i = 0; i < FX_LIST.length; i++) {
+    const f = FX_LIST[i]
+    fx +=
+      '<button class="fx-opt' + (s.effect === f.id ? ' active' : '') + '" data-fx="' + f.id + '">' +
+      '<span class="fx-ico">' + f.ico + '</span>' +
+      '<span class="fx-name">' + f.name + '</span></button>'
+  }
+
   return (
-    '<div class="card card-tight">' +
+    '<div class="card">' +
+    '<div class="card-title" style="margin-bottom:10px"><span class="t"><i>✨</i>氛围特效</span>' +
+    '<span class="faint tiny">铺在背景上的一层动画</span></div>' +
+    '<div class="fx-grid">' + fx + '</div>' +
+    '<div class="faint tiny mt-8">下雪 / 群星闪烁 / 波纹音符 / 樱花飘落，四选一，只在本机渲染，不影响记账。</div>' +
+    '<div class="fx-rows mt-8">' +
+    row('隐藏界面时压暗', '默认进入黑夜模式，夜里看着不刺眼', switchHtml('hideDim', s.hideDim !== false)) +
     row('粒子效果', '随主题飘落的细小光点', switchHtml('particles', s.particles !== false)) +
-    row('减少动画', '低性能设备可开启', switchHtml('reduceMotion', !!s.reduceMotion)) +
+    row('减少动画', '低性能设备可开启，同时关掉特效', switchHtml('reduceMotion', !!s.reduceMotion)) +
+    '</div>' +
     '</div>'
   )
 }
@@ -331,6 +355,13 @@ function switchHtml(key, on) {
   return '<button class="switch' + (on ? ' on' : '') + '" data-switch="' + key + '" role="switch" aria-checked="' + on + '"></button>'
 }
 
+function fxName(id) {
+  for (let i = 0; i < FX_LIST.length; i++) {
+    if (FX_LIST[i].id === id) return FX_LIST[i].name
+  }
+  return ''
+}
+
 function bind(el) {
   const s = getState().settings
 
@@ -435,6 +466,14 @@ function bind(el) {
       toast('已移除背景图片')
     })
   }
+
+  el.querySelectorAll('[data-fx]').forEach(function (n) {
+    n.addEventListener('click', function () {
+      const id = n.getAttribute('data-fx')
+      updateSettings({ effect: id })
+      if (id !== 'none') toast('已开启「' + fxName(id) + '」效果')
+    })
+  })
 
   el.querySelectorAll('[data-switch]').forEach(function (n) {
     n.addEventListener('click', function () {

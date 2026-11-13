@@ -6,7 +6,11 @@ from PIL import Image, ImageFilter, ImageEnhance, ImageOps
 SRC = r"C:\Users\risay\Desktop\shu"
 OUT = r"D:\ICT\coinbox\public\backgrounds"
 COLORS_OUT = r"D:\ICT\coinbox\src\bg-colors.js"
-TW, TH = 720, 1280
+# 画布按手机屏幕常见尺寸走 1080x1920。
+# 注意：这里只负责「排版」，不负责「凭空提清晰度」——
+# 原图短边 < 1000 的素材先用 4x-AnimeSharp 放大过再进来（见 scripts/README 说明），
+# 原图够大的直接重排就能拿到真实细节，不要一律压到 720。
+TW, TH = 1080, 1920
 
 GROUPS = [
     ("丛雨", "congyu", "丛雨", None),
@@ -44,7 +48,7 @@ def lighten(rgb, amount=0.14):
 
 def compose_bg(im):
     bg = ImageOps.fit(im, (TW, TH), method=Image.LANCZOS)
-    bg = bg.filter(ImageFilter.GaussianBlur(26))
+    bg = bg.filter(ImageFilter.GaussianBlur(round(26 * TW / 720)))
     bg = ImageEnhance.Brightness(bg).enhance(0.5)
     fg = im.copy()
     fg.thumbnail((int(TW * 0.96), int(TH * 0.96)), Image.LANCZOS)

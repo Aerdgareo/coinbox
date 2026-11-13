@@ -121,6 +121,42 @@ input {
   opacity: 1;
 }
 
+/* 黑夜模式：隐藏界面后默认压暗，夜里看不刺眼；点月亮按钮可切回原图 */
+.bg-night {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.55s var(--ease);
+  background: radial-gradient(
+    115% 85% at 50% 20%,
+    rgba(8, 10, 22, 0.42) 0%,
+    rgba(4, 5, 12, 0.74) 55%,
+    rgba(2, 3, 8, 0.9) 100%
+  );
+}
+
+body.hide-ui .bg-night.on {
+  opacity: 1;
+}
+
+/* 氛围特效层：下雪 / 群星 / 音符 / 樱花 */
+.bg-fx {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
+}
+
 .bg-particles {
   position: fixed;
   top: 0;
@@ -1802,6 +1838,57 @@ body.reduce-motion * {
   display: block;
 }
 
+/* 氛围特效选择：5 个小方块，图标 + 名字 */
+.fx-grid {
+  display: flex;
+  margin: 0 -4px;
+}
+
+.fx-opt {
+  flex: 1;
+  min-width: 0;
+  margin: 0 4px;
+  padding: 9px 2px 8px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  text-align: center;
+  transition: all 0.22s var(--ease);
+}
+
+.fx-opt.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+}
+
+.fx-ico {
+  display: block;
+  font-size: 16px;
+  line-height: 1.1;
+  color: var(--text-dim);
+}
+
+.fx-opt.active .fx-ico {
+  color: var(--accent-2);
+}
+
+.fx-name {
+  display: block;
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.fx-opt.active .fx-name {
+  color: var(--text);
+}
+
+.fx-rows {
+  border-top: 1px solid var(--border);
+}
+
 /* ---------- 隐藏界面 ---------- */
 .hide-ui-btn {
   position: fixed;
@@ -1850,6 +1937,42 @@ body.hide-ui .hide-ui-btn {
 
 body.hide-ui .hide-ui-btn:active {
   opacity: 0.9;
+}
+
+/* 黑夜模式切换：只在隐藏界面时出现，叠在眼睛按钮上方 */
+.night-btn {
+  position: fixed;
+  right: 14px;
+  bottom: calc(var(--safe-b) + 62px);
+  z-index: 40;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(10, 12, 20, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.88);
+  transition: opacity 0.25s var(--ease), transform 0.2s var(--ease);
+}
+
+body.hide-ui .night-btn {
+  opacity: 0.28;
+  pointer-events: auto;
+  transform: scale(1);
+  right: 12px;
+}
+
+body.hide-ui .night-btn:active {
+  opacity: 0.9;
+  transform: scale(0.92);
 }
 
 /* ---------- 礼盒蝴蝶结 ---------- */

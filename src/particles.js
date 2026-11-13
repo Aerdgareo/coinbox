@@ -143,9 +143,9 @@ function draw() {
 function tick(now) {
   if (!running) return
   if (!now) now = Date.now()
-  const dt = now - lastTime
-  lastTime = now
-  if (dt > 34) {
+  // 用「距上次绘制」的间隔做节流，否则 60Hz 下每帧 dt 都很小，会永远不画
+  if (now - lastTime >= 34) {
+    lastTime = now
     draw()
   } else {
     raf = requestAnimationFrame(tick)

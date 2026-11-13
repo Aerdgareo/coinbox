@@ -1,6 +1,7 @@
-import { init, subscribe, getState, refreshDaily, notify, todayStr } from './state.js'
+import { init, subscribe, getState, updateSettings, refreshDaily, notify, todayStr } from './state.js'
 import { applyAppearance } from './appearance.js'
 import { initParticles } from './particles.js'
+import { initEffects } from './effects.js'
 import { renderHome } from './views/home.js'
 import { renderHistory } from './views/history.js'
 import { renderSettings } from './views/settings.js'
@@ -88,6 +89,7 @@ function go(id) {
 function boot() {
   const canvas = document.getElementById('particles')
   initParticles(canvas)
+  initEffects(document.getElementById('fx'))
 
   const state = init()
   applyAppearance(state)
@@ -100,7 +102,16 @@ function boot() {
   if (hideBtn) {
     hideBtn.addEventListener('click', function () {
       const on = document.body.classList.toggle('hide-ui')
-      toast(on ? '界面已隐藏，轻点右下角恢复' : '界面已恢复')
+      toast(on ? '界面已隐藏，右下角可切换黑夜 / 原图' : '界面已恢复')
+    })
+  }
+
+  const nightBtn = document.getElementById('nightBtn')
+  if (nightBtn) {
+    nightBtn.addEventListener('click', function () {
+      const dim = !(getState().settings.hideDim !== false)
+      updateSettings({ hideDim: dim })
+      toast(dim ? '黑夜模式：已压暗' : '原图模式：按原色显示')
     })
   }
 

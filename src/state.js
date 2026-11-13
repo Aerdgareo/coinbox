@@ -4,6 +4,7 @@ const STORE_KEY = 'coinbox.state.v2'
 const IMG_KEY = 'coinbox.bgimage.v1'
 
 export const BG_FITS = ['cover', 'contain', 'tile', 'stretch', 'blur']
+export const BG_EFFECTS = ['none', 'snow', 'stars', 'notes', 'sakura']
 
 const listeners = []
 let state = null
@@ -109,6 +110,8 @@ function defaultState() {
       photoTint: 'auto',
       photoAccent: '#e8b45c',
       particles: true,
+      effect: 'stars',
+      hideDim: true,
       dailyDraws: 1,
       drawMin: 1,
       drawMax: 100,
@@ -161,6 +164,8 @@ function migrate(raw) {
   if (!s.settings.photoTint) s.settings.photoTint = 'auto'
   if (!s.settings.photoAccent) s.settings.photoAccent = '#e8b45c'
   if (BG_FITS.indexOf(s.settings.bgFit) === -1) s.settings.bgFit = 'cover'
+  if (BG_EFFECTS.indexOf(s.settings.effect) === -1) s.settings.effect = 'stars'
+  s.settings.hideDim = s.settings.hideDim !== false
   return s
 }
 

@@ -1,5 +1,5 @@
 #define MyAppName "攒钱盲盒"
-#define MyAppVersion "1.0.1"
+#define MyAppVersion "1.0.2"
 #define MyAppPublisher "CoinBox"
 #define MyAppExeName "CoinBox.exe"
 #define MyAppId "{{8F3C2A64-2B1D-4E57-9C0A-6D1E7B4F2A91}"

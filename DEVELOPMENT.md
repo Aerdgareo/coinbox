@@ -51,11 +51,12 @@ android/                   Capacitor Android 工程
 
 `scripts/make-all-backgrounds.py` 从本地 `C:\Users\risay\Desktop\shu` 读图：
 
-- 统一裁成 720×1280，加高斯模糊垫底、人物置顶，输出 webp（quality 82）
+- 画布 1080×1920（对齐手机常见分辨率），加高斯模糊垫底、人物置顶，输出 webp（quality 82）
+- 只做排版，不做「凭空提清晰度」：原图短边 ≥1080 直接用原图重排；1000~1079 用 Lanczos 补 8% 以内；<1000 才先用 4x-AnimeSharp 放大再排
 - 按 `前缀-序号.webp` 命名，写到 `public/backgrounds/`
 - 同时提取每张图的主色，写入 `src/bg-colors.js`
 - 支持向下扫一层子目录（画师作品子文件夹）
-- 已存在的 webp 不重复压缩，只补算主色
+- 已存在的 webp 不重复压缩，只补算主色（换画布尺寸时先删掉旧的 webp，否则不会重出）
 
 新增一组：在脚本 `GROUPS` 里加 `(显示名, 前缀, 源目录, None)`，跑完再改 `src/themes.js` 的 `PHOTO_GROUPS` 加 `{ prefix, label, count }`。
 
@@ -96,7 +97,7 @@ cd android && ./gradlew assembleDebug
 
 1. 打开「适用于 Android 的 Windows 子系统设置 → 开发人员模式」
 2. `adb connect 127.0.0.1:58526`
-3. `adb install -r release/CoinBox-1.0.1-Android.apk`
+3. `adb install -r release/CoinBox-1.0.2-Android.apk`
 
 开了开发人员模式仍被拒，重启一次 WSA 再连。
 

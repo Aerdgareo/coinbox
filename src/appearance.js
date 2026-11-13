@@ -1,6 +1,7 @@
 import { getBgImage } from './state.js'
 import { getTheme } from './themes.js'
 import { setParticles } from './particles.js'
+import { setEffect } from './effects.js'
 
 function normHex(hex) {
   let h = String(hex || '#7b6cff').replace('#', '')
@@ -95,6 +96,26 @@ export function applyAppearance(state) {
     theme: s.theme,
     color: accent2
   })
+
+  setEffect({
+    enabled: s.effect !== 'none' && !s.reduceMotion,
+    kind: s.effect || 'none',
+    color: accent2
+  })
+
+  applyHideDim(s)
+}
+
+/** 隐藏界面时的「黑夜模式」：默认压暗，用户可一键切回原图 */
+export function applyHideDim(s) {
+  const night = document.getElementById('bgNight')
+  if (night) night.classList.toggle('on', s.hideDim !== false)
+  const btn = document.getElementById('nightBtn')
+  if (btn) {
+    const dim = s.hideDim !== false
+    btn.textContent = dim ? '🌙' : '☀'
+    btn.setAttribute('title', dim ? '黑夜模式已开，点击看原图' : '当前是原图，点击回到黑夜模式')
+  }
 }
 
 const FIT_CLASSES = ['fit-cover', 'fit-contain', 'fit-tile', 'fit-stretch', 'fit-blur']
