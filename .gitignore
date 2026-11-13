@@ -1,0 +1,23 @@
+node_modules/
+dist/
+release/
+screenshots/
+
+# Android 构建产物 / 本机配置
+android/.gradle/
+android/.idea/
+android/app/build/
+android/build/
+android/local.properties
+# cap sync 从 dist 生成，不入库
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+
+# 立绘素材不入库（版权归原作者，自行放到 public/backgrounds/）
+public/backgrounds/*
+!public/backgrounds/README.md
+
+*.log
+.tmp-*
+.ud*/
+.verify-install/

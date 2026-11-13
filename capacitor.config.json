@@ -1,0 +1,13 @@
+{
+  "appId": "app.coinbox.lottery",
+  "appName": "攒钱盲盒",
+  "webDir": "dist",
+
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#0b0d18"
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

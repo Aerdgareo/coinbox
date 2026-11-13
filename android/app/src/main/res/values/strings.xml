@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">攒钱盲盒</string>
+    <string name="title_activity_main">攒钱盲盒</string>
+    <string name="package_name">app.coinbox.lottery</string>
+    <string name="custom_url_scheme">app.coinbox.lottery</string>
+</resources>

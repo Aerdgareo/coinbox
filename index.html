@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0e1020">
+  <meta name="format-detection" content="telephone=no">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' ws: http://localhost:5173; font-src 'self' data:">
+  <title>攒钱盲盒</title>
+  <link rel="stylesheet" href="./src/styles/base.css">
+  <link rel="stylesheet" href="./src/styles/themes.css">
+</head>
+<body data-theme="default">
+  <div id="app">
+    <div class="bg-fill" id="bgFill" aria-hidden="true"></div>
+    <div class="bg-base" id="bgBase"></div>
+    <canvas class="bg-particles" id="particles"></canvas>
+    <div class="bg-deco" aria-hidden="true">
+      <i class="deco deco-a"></i>
+      <i class="deco deco-b"></i>
+      <i class="deco deco-c"></i>
+    </div>
+    <main class="shell">
+      <header class="topbar" id="topbar"></header>
+      <section class="view" id="view"></section>
+      <nav class="tabbar" id="tabbar"></nav>
+    </main>
+    <div class="overlay" id="overlay" hidden></div>
+    <button class="hide-ui-btn" id="hideUiBtn" title="隐藏界面，欣赏背景">👁</button>
+    <button class="bgfit-btn" id="bgFitBtn" title="切换背景显示方式" aria-label="切换背景显示方式">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="5" width="18" height="14" rx="2.4"/><rect x="8.2" y="9" width="7.6" height="6" rx="1"/>
+      </svg>
+    </button>
+    <div class="toast" id="toast" aria-live="polite"></div>
+  </div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
