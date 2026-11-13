@@ -1,6 +1,6 @@
 {
   "name": "coinbox",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "description": "攒钱盲盒 - 每天开一次，为想要的东西攒钱",
   "author": "CoinBox",
@@ -57,5 +57,6 @@
       "oneClick": false,
       "artifactName": "CoinBox-${version}-x64-Setup.${ext}"
     }
-  }
+  },
+  "license": "MIT"
 }
