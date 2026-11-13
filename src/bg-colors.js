@@ -546,5 +546,13 @@ export const BG_COLORS = {
   "other-12": [
     "#93424e",
     "#b36873"
+  ],
+  "unicorn-02": [
+    "#6149d0",
+    "#9485da"
+  ],
+  "unicorn-03": [
+    "#9b71bf",
+    "#b9a0cf"
   ]
 }

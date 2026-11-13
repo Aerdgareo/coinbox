@@ -51,6 +51,8 @@ JOBS = [
     ("missile-06", p(NEW, "MISSILE228", "062_429077_83708256_p3.jpg")),
     # Unicorn
     ("unicorn-01", p(NEW, "Unicorn", "Unicorn.(Azur.Lane).full.2596012.jpg")),
+    ("unicorn-02", p(NEW, "Unicorn", "Unicorn (3).png")),
+    ("unicorn-03", p(NEW, "Unicorn", "Unicorn (4).png")),
     # ホロライブ
     ("holo-01", p(NEW, "ホロライブ", "00000001.jpg")),
     ("holo-02", p(NEW, "ホロライブ", "00000007.jpg")),
@@ -86,7 +88,13 @@ def compose(im):
 
 
 def load_src(path):
-    return ImageOps.exif_transpose(Image.open(path)).convert("RGB")
+    im = ImageOps.exif_transpose(Image.open(path))
+    if im.mode in ("RGBA", "LA", "P"):
+        im = im.convert("RGBA")
+        flat = Image.new("RGB", im.size, (255, 255, 255))
+        flat.paste(im, mask=im.getchannel("A"))
+        return flat
+    return im.convert("RGB")
 
 
 def upscale_via_comfy(key, src):
@@ -142,7 +150,7 @@ def accent_colors(path):
         r2, g2, b2 = colorsys.hls_to_rgb(h, l, s)
         return int(r2 * 255), int(g2 * 255), int(b2 * 255)
 
-    im = Image.open(path).convert("RGB").resize((48, 80))
+    im = load_src(path).resize((48, 80))
     buckets = {}
     for r, g, b in im.getdata():
         s = r + g + b

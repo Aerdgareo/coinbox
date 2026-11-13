@@ -38,14 +38,16 @@ async function main() {
   console.log('GROUPS', JSON.stringify(heads, null, 0))
 
   // 展开 MISSILE228
+  const gname = process.argv[2] || 'MISSILE228'
+  const tid = process.argv[3] || 'photo-missile-03'
   await js(
-    '(function(){var hs=document.querySelectorAll(".theme-group-head");for(var i=0;i<hs.length;i++){if(hs[i].innerText.indexOf("MISSILE228")>=0){hs[i].click();hs[i].scrollIntoView({block:"center"});return i;}}return -1;})()'
+    '(function(){var g=' + JSON.stringify(gname) + ';var hs=document.querySelectorAll(".theme-group-head");for(var i=0;i<hs.length;i++){if(hs[i].innerText.indexOf(g)>=0){hs[i].click();hs[i].scrollIntoView({block:"center"});return i;}}return -1;})()'
   )
   await sleep(600)
   await shot('80-groups.png')
 
   const picked = await js(
-    '(function(){var c=document.querySelector(\'[data-theme-id="photo-missile-03"]\');if(!c)return "no-card";c.click();return c.getAttribute("data-theme-id");})()'
+    '(function(){var c=document.querySelector(\'[data-theme-id="' + tid + '"]\');if(!c)return "no-card";c.click();return c.getAttribute("data-theme-id");})()'
   )
   console.log('PICK', picked)
   await sleep(900)

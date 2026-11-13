@@ -718,5 +718,15 @@
   "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\Hakurei.Reimu.full.1801219.jpg",
   "short": 1032,
   "tier": "lanczos"
+ },
+ "unicorn-02": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\Unicorn\\Unicorn (3).png",
+  "short": 579,
+  "tier": "4x"
+ },
+ "unicorn-03": {
+  "src": "C:\\Users\\risay\\Desktop\\shu\\新增\\Unicorn\\Unicorn (4).png",
+  "short": 1487,
+  "tier": "direct"
  }
 }

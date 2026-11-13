@@ -86,7 +86,7 @@ const PHOTO_GROUPS = [
   { prefix: 'fengjin', label: '风堇合集', count: 5 },
   { prefix: 'futaba', label: '双叶凑音', count: 31 },
   { prefix: 'missile', label: 'MISSILE228', count: 6 },
-  { prefix: 'unicorn', label: 'Unicorn', count: 1 },
+  { prefix: 'unicorn', label: 'Unicorn', count: 3 },
   { prefix: 'holo', label: 'ホロライブ', count: 3 },
   { prefix: 'shino', label: '椎野せら', count: 4 },
   // 原「杂」分组已并入「其他」，未分类素材也放这里
