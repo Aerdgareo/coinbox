@@ -36,6 +36,17 @@ const STAR_FADE_OUT = 0.075
 const STAR_FADE_IN = 0.055
 let nextShuffle = 0
 
+/** 樱花：隔一阵子来一股风（约 9~22 秒一次），单阵持续 2.5~4.7 秒 */
+const GUST_GAP_MIN = 260
+const GUST_GAP_MAX = 620
+const GUST_LIFE_MIN = 70
+const GUST_LIFE_MAX = 130
+/** 风推花瓣的每帧位移上限（峰值，px/帧） */
+const WIND_PUSH = 1.7
+let gust = null
+let wind = 0
+let nextGust = 0
+
 function rand(min, max) {
   return min + Math.random() * (max - min)
 }
@@ -124,7 +135,9 @@ function makePetal(initial) {
     spin: rand(0.006, 0.022) * (Math.random() < 0.5 ? -1 : 1),
     squash: rand(0.45, 0.8),
     color: pick(PETAL_COLORS),
-    a: rand(0.45, 0.92)
+    a: rand(0.45, 0.92),
+    // 每片花瓣迎风的敏感度不同，一阵风里不会被吹得一样快
+    windK: rand(0.55, 1.45)
   }
 }
 
@@ -301,9 +314,12 @@ function rippleTick() {
 }
 
 function step(p) {
-  p.x += (p.vx || 0) + (p.amp ? Math.sin(p.ph) * 0.18 * p.amp : 0)
-  p.ph += 0.012
-  p.y += p.vy || 0
+  // 风只作用于樱花：横向推、摆动加快、略微托起 → 像被风带着走
+  const gustX = cfg.kind === 'sakura' ? wind * (p.windK || 1) : 0
+
+  p.x += (p.vx || 0) + gustX * WIND_PUSH + (p.amp ? Math.sin(p.ph) * 0.18 * p.amp : 0)
+  p.ph += 0.012 + Math.abs(gustX) * 0.06
+  p.y += (p.vy || 0) - Math.abs(gustX) * 0.12
 
   if (cfg.kind === 'stars') {
     if (p.state === 'out') {
@@ -325,11 +341,43 @@ function step(p) {
     }
   }
 
-  if (cfg.kind === 'sakura') p.rot += p.spin
+  if (cfg.kind === 'sakura') p.rot += p.spin * (1 + Math.abs(gustX) * 1.6)
   if (cfg.kind === 'notes') {
     p.life += 1
     const k = p.life / p.span
     p.fade = k < 0.15 ? k / 0.15 : k > 0.75 ? Math.max(0, (1 - k) / 0.25) : 1
+  }
+}
+
+/** 樱花的风：长时间无风，偶尔来一阵，起风快、落风慢 */
+function updateWind() {
+  if (cfg.kind !== 'sakura') {
+    wind = 0
+    gust = null
+    return
+  }
+  if (!gust) {
+    if (clock > nextGust) {
+      const dir = Math.random() < 0.26 ? -1 : 1
+      gust = {
+        str: rand(0.7, 1.5) * dir,
+        age: 0,
+        life: Math.round(rand(GUST_LIFE_MIN, GUST_LIFE_MAX))
+      }
+      nextGust = clock + Math.round(rand(GUST_GAP_MIN, GUST_GAP_MAX))
+    } else {
+      wind = 0
+      return
+    }
+  }
+  gust.age += 1
+  const k = gust.age / gust.life
+  // 前 18% 拉满，之后按 1.5 次幂衰减，尾巴长一点才像风停
+  const env = k < 0.18 ? k / 0.18 : Math.pow(Math.max(0, 1 - (k - 0.18) / 0.82), 1.5)
+  wind = gust.str * env
+  if (gust.age >= gust.life) {
+    gust = null
+    wind = 0
   }
 }
 
@@ -355,6 +403,7 @@ function draw() {
   ctx.clearRect(0, 0, w, h)
 
   if (cfg.kind === 'stars' && clock > nextShuffle) shuffleStars()
+  updateWind()
 
   for (let i = 0; i < items.length; i++) {
     const p = items[i]
@@ -428,6 +477,9 @@ export function setEffect(patch) {
     shooting = null
     nextShoot = clock + 200
     nextShuffle = clock + Math.round(rand(STAR_SHUFFLE_MIN, STAR_SHUFFLE_MAX))
+    gust = null
+    wind = 0
+    nextGust = clock + Math.round(rand(GUST_GAP_MIN, GUST_GAP_MAX))
   }
   ensure()
   if (cfg.enabled && cfg.kind !== 'none') start()
