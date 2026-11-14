@@ -116,7 +116,7 @@ function makePetal(initial) {
     x: rand(-20, w + 20),
     y: initial ? rand(0, h) : rand(-40, -8),
     r: rand(5, 9.6),
-    vy: rand(0.3, 0.85),
+    vy: rand(0.5, 1.05),
     vx: rand(-0.15, 0.5),
     ph: rand(0, 6.283),
     amp: rand(0.4, 1.1),
