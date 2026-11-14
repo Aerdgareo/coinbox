@@ -45,9 +45,9 @@
 
 | 文件 | 适用 | 说明 |
 |------|------|------|
-| `CoinBox-1.0.3-x64-Setup-Inno.exe` | Windows 10/11 | 安装版，可选目录、建快捷方式、可从「应用和功能」卸载 |
-| `CoinBox-1.0.3-x64-Portable.exe` | Windows 10/11 | 便携版，单个 exe 双击即用，不写注册表 |
-| `CoinBox-1.0.3-Android.apk` | Android 5.1+ | 手机安装包，已锁定竖屏 |
+| `CoinBox-1.0.4-x64-Setup-Inno.exe` | Windows 10/11 | 安装版，可选目录、建快捷方式、可从「应用和功能」卸载 |
+| `CoinBox-1.0.4-x64-Portable.exe` | Windows 10/11 | 便携版，单个 exe 双击即用，不写注册表 |
+| `CoinBox-1.0.4-Android.apk` | Android 5.1+ | 手机安装包，已锁定竖屏 |
 
 **Windows 安装提示**：程序没有购买代码签名证书，首次运行 SmartScreen 可能提示「Windows 已保护你的电脑」。点「更多信息」→「仍要运行」即可。
 
