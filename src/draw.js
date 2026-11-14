@@ -3,11 +3,10 @@
  *
  * 规则：
  * 1. 每天的奖池从「设置里的金额范围」中生成 8 个档位；
- * 2. 金额越大，中奖概率越小；
- * 3. 目标攒得越多（进度越高），大额档概率进一步下降；
- * 4. 默认范围 1~100 元，可在设置里调整；
- * 5. 没抽中任何档位时给 0.1 元「安慰奖」，不空手；
- * 6. 同一天同一目标结果恒定（按 日期+目标ID 播种），跨日刷新。
+ * 2. 金额越大，中奖概率越小（与攒钱进度无关，进度不影响概率）；
+ * 3. 默认范围 1~100 元，可在设置里调整；
+ * 4. 没抽中任何档位时给 0.1 元「安慰奖」，不空手；
+ * 5. 同一天同一目标结果恒定（按 日期+目标ID 播种），跨日刷新。
  */
 
 export function clamp(n, min, max) {
@@ -64,12 +63,10 @@ export const MISS_AMOUNT = 0.1
 
 const WEIGHTS = [20, 17, 14, 12, 9, 7, 5, 4]
 
-function buildChances(progress, rnd) {
+function buildChances(rnd) {
   const w = []
   for (let i = 0; i < WEIGHTS.length; i++) {
-    let base = WEIGHTS[i] * (1 + (rnd() - 0.5) * 0.14)
-    if (i >= 4) base *= 1 - progress * 0.35
-    w.push(Math.max(0.4, base))
+    w.push(Math.max(0.4, WEIGHTS[i] * (1 + (rnd() - 0.5) * 0.14)))
   }
 
   let sum = 0
@@ -124,7 +121,7 @@ export function generateTiers(goal, dateStr, range) {
     amounts.push(roundAmount(min * Math.pow(ratio, i / (TIER_KEYS.length - 1))))
   }
 
-  const chances = buildChances(progress, rnd)
+  const chances = buildChances(rnd)
 
   const tiers = {
     date: dateStr,
