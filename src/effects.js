@@ -28,6 +28,14 @@ let shooting = null
 let nextShoot = 0
 let clock = 0
 
+/** 群星每隔这么多帧重新排布一次位置（约 23~36 秒） */
+const STAR_SHUFFLE_MIN = 650
+const STAR_SHUFFLE_MAX = 1000
+/** 单颗星的淡出/淡入速度（每帧） */
+const STAR_FADE_OUT = 0.075
+const STAR_FADE_IN = 0.055
+let nextShuffle = 0
+
 function rand(min, max) {
   return min + Math.random() * (max - min)
 }
@@ -61,14 +69,30 @@ function makeStar(initial) {
   const big = Math.random() < 0.16
   return {
     x: rand(0, w),
-    y: initial ? rand(0, h) : rand(0, h),
+    y: initial ? rand(0, h) : rand(-30, -4),
     r: big ? rand(1.5, 2.3) : rand(0.5, 1.3),
     ph: rand(0, 6.283),
     sp: rand(0.008, 0.032),
     a: rand(0.2, 0.85),
     vy: rand(0.01, 0.05),
-    big: big
+    big: big,
+    fade: initial ? 1 : 0,
+    state: initial ? 'live' : 'in',
+    hold: 0
   }
+}
+
+/** 换一个位置重新排这颗星（保留淡入，看不出来是瞬移） */
+function respawnStar(p) {
+  const big = Math.random() < 0.16
+  p.x = rand(0, w)
+  p.y = rand(0, h)
+  p.r = big ? rand(1.5, 2.3) : rand(0.5, 1.3)
+  p.ph = rand(0, 6.283)
+  p.sp = rand(0.006, 0.034)
+  p.a = rand(0.2, 0.85)
+  p.vy = rand(0.01, 0.05)
+  p.big = big
 }
 
 function makeNote(initial) {
@@ -156,15 +180,16 @@ function drawSnow(p) {
 
 function drawStar(p) {
   const tw = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(clock * p.sp * 3.2 + p.ph))
+  const base = p.a * tw * p.fade
   ctx.fillStyle = '#f4f7ff'
   ctx.strokeStyle = '#f4f7ff'
-  ctx.globalAlpha = p.a * tw
+  ctx.globalAlpha = base
   ctx.beginPath()
   ctx.arc(p.x, p.y, p.r, 0, 6.2832)
   ctx.fill()
   if (p.big) {
     const arm = p.r * (3.4 + tw * 2.2)
-    ctx.globalAlpha = p.a * tw * 0.55
+    ctx.globalAlpha = base * 0.55
     ctx.lineWidth = 0.7
     ctx.beginPath()
     ctx.moveTo(p.x - arm, p.y)
@@ -280,12 +305,44 @@ function step(p) {
   p.ph += 0.012
   p.y += p.vy || 0
 
+  if (cfg.kind === 'stars') {
+    if (p.state === 'out') {
+      if (p.hold > 0) p.hold -= 1
+      else {
+        p.fade -= STAR_FADE_OUT
+        if (p.fade <= 0) {
+          p.fade = 0
+          respawnStar(p)
+          p.state = 'in'
+        }
+      }
+    } else if (p.state === 'in') {
+      p.fade += STAR_FADE_IN
+      if (p.fade >= 1) {
+        p.fade = 1
+        p.state = 'live'
+      }
+    }
+  }
+
   if (cfg.kind === 'sakura') p.rot += p.spin
   if (cfg.kind === 'notes') {
     p.life += 1
     const k = p.life / p.span
     p.fade = k < 0.15 ? k / 0.15 : k > 0.75 ? Math.max(0, (1 - k) / 0.25) : 1
   }
+}
+
+/** 全星图错峰熄灭→换位→淡入，看起来像「换了一片星空」而不是硬切 */
+function shuffleStars() {
+  for (let i = 0; i < items.length; i++) {
+    const p = items[i]
+    if (p.state === 'live') {
+      p.state = 'out'
+      p.hold = Math.floor(Math.random() * 32)
+    }
+  }
+  nextShuffle = clock + Math.round(rand(STAR_SHUFFLE_MIN, STAR_SHUFFLE_MAX))
 }
 
 function outOfView(p) {
@@ -296,6 +353,8 @@ function outOfView(p) {
 function draw() {
   if (!ctx) return
   ctx.clearRect(0, 0, w, h)
+
+  if (cfg.kind === 'stars' && clock > nextShuffle) shuffleStars()
 
   for (let i = 0; i < items.length; i++) {
     const p = items[i]
@@ -368,6 +427,7 @@ export function setEffect(patch) {
     ripples = []
     shooting = null
     nextShoot = clock + 200
+    nextShuffle = clock + Math.round(rand(STAR_SHUFFLE_MIN, STAR_SHUFFLE_MAX))
   }
   ensure()
   if (cfg.enabled && cfg.kind !== 'none') start()
