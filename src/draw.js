@@ -2,7 +2,8 @@
  * 抽奖规则引擎（纯函数，不碰 DOM）
  *
  * 规则：
- * 1. 每天的奖池从「设置里的金额范围」中生成 8 个档位；
+ * 1. 每天的奖池从「设置里的金额范围」中生成 8 个档位，档位金额每天重新排布
+ *    （首档 = 范围下限，末档 = 范围上限，中间随机），跨日不同；
  * 2. 金额越大，中奖概率越小（与攒钱进度无关，进度不影响概率）；
  * 3. 默认范围 1~100 元，可在设置里调整；
  * 4. 没抽中任何档位时给 0.1 元「安慰奖」，不空手；
@@ -18,7 +19,7 @@ export function round1(n) {
 }
 
 export function roundAmount(n) {
-  if (n < 1) return Math.max(0.1, Math.round(n * 10) / 10)
+  if (n < 3) return Math.max(0.1, Math.round(n * 10) / 10)
   if (n < 10) return Math.round(n * 2) / 2
   if (n < 100) return Math.round(n)
   return Math.round(n / 5) * 5
@@ -98,6 +99,54 @@ function buildChances(rnd) {
 }
 
 /**
+ * 生成每天的 8 档金额。
+ *
+ * 在「下限 → 上限」的对数区间里把 7 段间距随机打散再归一化：
+ * 首档恒等于设置的下限、末档恒等于上限，中间的档位每天重新排布，
+ * 所以换个日子打开，奖池金额就不一样了。间距在 0.72~1.28 倍之间浮动，
+ * 既保证递增，又能让相邻档位明显拉开或靠近。
+ */
+function buildAmounts(min, max, rnd) {
+  const n = TIER_KEYS.length
+  const steps = n - 1
+  const span = Math.log(max) - Math.log(min)
+  const out = [roundAmount(min)]
+  if (!(span > 0.05)) {
+    // 上下限几乎相等，没有可分配的区间 → 8 档同额
+    for (let i = 1; i < n; i++) out.push(out[0])
+    return out
+  }
+
+  const gaps = []
+  let sum = 0
+  for (let i = 0; i < steps; i++) {
+    const g = 1 + (rnd() - 0.5) * 0.56
+    gaps.push(g)
+    sum += g
+  }
+  const k = steps / sum
+
+  let acc = Math.log(min)
+  for (let i = 0; i < steps; i++) {
+    acc += (span / steps) * gaps[i] * k
+    out.push(roundAmount(Math.exp(acc)))
+  }
+
+  // 取整后可能撞档，按最小可读步长往上顶，保持严格递增
+  for (let i = 1; i < n; i++) {
+    if (out[i] <= out[i - 1]) out[i] = stepUp(out[i - 1])
+  }
+  return out
+}
+
+function stepUp(v) {
+  if (v < 3) return Math.round((v + 0.1) * 10) / 10
+  if (v < 10) return v + 0.5
+  if (v < 100) return v + 1
+  return v + 5
+}
+
+/**
  * @param {{id:string,target:number,saved:number}} goal
  * @param {string} dateStr  YYYY-MM-DD
  * @param {{drawMin?:number,drawMax?:number}} range
@@ -112,14 +161,12 @@ export function generateTiers(goal, dateStr, range) {
   const min = clamp(minRaw || 1, 0.1, 500)
   const max = clamp(maxRaw || 100, min, 5000)
 
-  const seed = hashStr((goal ? goal.id : 'x') + '@' + dateStr + '|' + min + '-' + max)
-  const rnd = mulberry32(seed)
+  const seedStr = (goal ? goal.id : 'x') + '@' + dateStr + '|' + min + '-' + max
+  // 两条随机流分开：改动金额排布不会连带改变概率
+  const rnd = mulberry32(hashStr(seedStr))
+  const rndAmount = mulberry32(hashStr(seedStr + '#amounts'))
 
-  const ratio = max / min
-  const amounts = []
-  for (let i = 0; i < TIER_KEYS.length; i++) {
-    amounts.push(roundAmount(min * Math.pow(ratio, i / (TIER_KEYS.length - 1))))
-  }
+  const amounts = buildAmounts(min, max, rndAmount)
 
   const chances = buildChances(rnd)
 

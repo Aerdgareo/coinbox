@@ -102,7 +102,7 @@ export function openDraw() {
     escapeHtml(goal.name) + '」</div>' +
     tierRow(tiers) +
     '<div class="faint tiny mt-8" style="line-height:1.6">' +
-    '越大的奖越难抽，与已攒多少无关。<br>' +
+    '奖池每天重新排布一次，越大的奖越难抽。<br>' +
     '没抽中档位也有 ¥0.1 安慰奖，不会空手。<br>' +
     '今日还剩 ' + remain + ' / ' + state.settings.dailyDraws + ' 次。' +
     '</div>' +
