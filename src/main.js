@@ -6,6 +6,7 @@ import { renderHome } from './views/home.js'
 import { renderHistory } from './views/history.js'
 import { renderSettings } from './views/settings.js'
 import { openBgFitSheet } from './views/bgfit.js'
+import { initBgAdjust } from './bg-transform.js'
 import { toast } from './ui.js'
 
 const ICONS = {
@@ -44,14 +45,7 @@ function renderTopbar() {
     '<div class="brand-text">' +
     '<div class="brand-title">攒钱盲盒</div>' +
     '<div class="brand-sub">每天开一次 · 离想要的东西更近一点</div>' +
-    '</div></div>' +
-    '<div class="topbar-actions">' +
-    '<button class="icon-btn" data-quick-theme title="换主题">🎨</button>' +
-    '</div>'
-
-  el.querySelector('[data-quick-theme]').addEventListener('click', function () {
-    go('settings')
-  })
+    '</div></div>'
 }
 
 function renderTabs() {
@@ -121,6 +115,8 @@ function boot() {
       openBgFitSheet()
     })
   }
+
+  initBgAdjust()
 
   subscribe(function (s) {
     applyAppearance(s)

@@ -2,6 +2,7 @@ import { getBgImage } from './state.js'
 import { getTheme } from './themes.js'
 import { setParticles } from './particles.js'
 import { setEffect } from './effects.js'
+import { applyBgTransform } from './bg-transform.js'
 
 function normHex(hex) {
   let h = String(hex || '#7b6cff').replace('#', '')
@@ -88,6 +89,7 @@ export function applyAppearance(state) {
   }
 
   applyBackground(s, theme)
+  applyBgTransform(s)
 
   const computed = window.getComputedStyle(body)
   const accent2 = (computed.getPropertyValue('--accent-2') || '#a78bfa').trim()
@@ -109,13 +111,38 @@ export function applyAppearance(state) {
 /** 隐藏界面时的「黑夜模式」：默认压暗，用户可一键切回原图 */
 export function applyHideDim(s) {
   const night = document.getElementById('bgNight')
-  if (night) night.classList.toggle('on', s.hideDim !== false)
+  if (night) {
+    night.classList.toggle('on', s.hideDim !== false)
+    night.style.background = dimGradient(s)
+  }
   const btn = document.getElementById('nightBtn')
   if (btn) {
     const dim = s.hideDim !== false
     btn.textContent = dim ? '🌙' : '☀'
     btn.setAttribute('title', dim ? '黑夜模式已开，点击看原图' : '当前是原图，点击回到黑夜模式')
   }
+}
+
+/**
+ * 压暗层是「以某点为圆心的径向渐变」：圆心处最亮（压得最少），越往外越暗。
+ * 圆心默认在 50% / 20%，也就是人物头部所在的上半屏中间，所以头脸最清楚、四周和底部最暗。
+ */
+export function dimGradient(s) {
+  const x = Math.round(s.dimX != null ? s.dimX : 50)
+  const y = Math.round(s.dimY != null ? s.dimY : 20)
+  const spread = (s.dimSpread != null ? s.dimSpread : 100) / 100
+  const k = (s.dimStrength != null ? s.dimStrength : 100) / 100
+  const rx = Math.round(115 * spread)
+  const ry = Math.round(85 * spread)
+  const a1 = Math.min(0.96, 0.42 * k).toFixed(3)
+  const a2 = Math.min(0.97, 0.74 * k).toFixed(3)
+  const a3 = Math.min(0.98, 0.9 * k).toFixed(3)
+  return (
+    'radial-gradient(' + rx + '% ' + ry + '% at ' + x + '% ' + y + '%,' +
+    'rgba(8,10,22,' + a1 + ') 0%,' +
+    'rgba(4,5,12,' + a2 + ') 55%,' +
+    'rgba(2,3,8,' + a3 + ') 100%)'
+  )
 }
 
 const FIT_CLASSES = ['fit-cover', 'fit-contain', 'fit-tile', 'fit-stretch', 'fit-blur']

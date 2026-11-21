@@ -112,7 +112,15 @@ function defaultState() {
       particles: true,
       effect: 'stars',
       hideDim: true,
+      dimX: 50,
+      dimY: 20,
+      dimSpread: 100,
+      dimStrength: 100,
+      bgZoom: 1,
+      bgOffX: 0,
+      bgOffY: 0,
       dailyDraws: 1,
+      drawQuota: 'shared',
       drawMin: 1,
       drawMax: 100,
       sound: true,
@@ -121,6 +129,7 @@ function defaultState() {
     draw: {
       date: '',
       used: 0,
+      usedByGoal: {},
       tiers: null
     },
     history: []
@@ -166,7 +175,24 @@ function migrate(raw) {
   if (BG_FITS.indexOf(s.settings.bgFit) === -1) s.settings.bgFit = 'cover'
   if (BG_EFFECTS.indexOf(s.settings.effect) === -1) s.settings.effect = 'stars'
   s.settings.hideDim = s.settings.hideDim !== false
+
+  // 压暗中心 / 范围 / 强度（老存档没有这些字段，用默认值补齐）
+  s.settings.dimX = clamp(numOr(s.settings.dimX, 50), 0, 100)
+  s.settings.dimY = clamp(numOr(s.settings.dimY, 20), 0, 100)
+  s.settings.dimSpread = clamp(numOr(s.settings.dimSpread, 100), 60, 200)
+  s.settings.dimStrength = clamp(numOr(s.settings.dimStrength, 100), 20, 180)
+  s.settings.bgZoom = clamp(numOr(s.settings.bgZoom, 1), 1, 3)
+  s.settings.bgOffX = clamp(numOr(s.settings.bgOffX, 0), -80, 80)
+  s.settings.bgOffY = clamp(numOr(s.settings.bgOffY, 0), -80, 80)
+  if (s.settings.drawQuota !== 'perGoal') s.settings.drawQuota = 'shared'
+  if (!s.draw || typeof s.draw !== 'object') s.draw = { date: '', used: 0, usedByGoal: {}, tiers: null }
+  if (!s.draw.usedByGoal || typeof s.draw.usedByGoal !== 'object') s.draw.usedByGoal = {}
   return s
+}
+
+function numOr(v, d) {
+  const n = Number(v)
+  return isFinite(n) ? n : d
 }
 
 export function getState() {
@@ -268,7 +294,10 @@ export function refreshDaily(force) {
   const today = todayStr()
   const goal = activeGoal()
   if (force || !state.draw.tiers || state.draw.date !== today || !state.draw.tiers.t1) {
-    if (state.draw.date !== today) state.draw.used = 0
+    if (state.draw.date !== today) {
+      state.draw.used = 0
+      state.draw.usedByGoal = {}
+    }
     state.draw.date = today
     state.draw.tiers = generateTiers(goal, today, state.settings)
   }
@@ -279,9 +308,18 @@ export function rebuildTiers() {
   save()
 }
 
+/** 今天已经用掉的次数：共享模式看全局，每目标模式看当前目标 */
+function usedToday() {
+  if (state.settings.drawQuota === 'perGoal') {
+    const g = activeGoal()
+    return Number((state.draw.usedByGoal || {})[g.id]) || 0
+  }
+  return Number(state.draw.used) || 0
+}
+
 export function drawRemaining() {
   refreshDaily()
-  return clamp(state.settings.dailyDraws - state.draw.used, 0, 3)
+  return clamp(state.settings.dailyDraws - usedToday(), 0, 3)
 }
 
 export function performDraw() {
@@ -300,7 +338,12 @@ export function performDraw() {
     achievements = applyToGoal(goal, amount).achievements
   }
 
-  state.draw.used += 1
+  if (state.settings.drawQuota === 'perGoal') {
+    const m = state.draw.usedByGoal || (state.draw.usedByGoal = {})
+    m[goal.id] = (Number(m[goal.id]) || 0) + 1
+  } else {
+    state.draw.used += 1
+  }
   state.history.unshift({
     id: uid('h'),
     ts: Date.now(),
@@ -396,8 +439,59 @@ export function updateGoal(id, data) {
   return true
 }
 
-export function deleteGoal(id) {
-  if (state.goals.length <= 1) return false
+/** 重新计算大目标的已存金额 / 金额合计 / 完成状态 */
+function recalcGoal(g) {
+  let childSum = 0
+  for (let i = 0; i < (g.children || []).length; i++) childSum += g.children[i].saved
+  if (g.ownSaved == null) g.ownSaved = 0
+  g.saved = Math.round((childSum + g.ownSaved) * 100) / 100
+  syncGoalTarget(g)
+  g.doneAt = g.saved >= g.target ? g.doneAt || Date.now() : null
+}
+
+/** 就地修改单个子目标（首页点子目标卡片进来的快捷编辑） */
+export function updateChild(goalId, childId, patch) {
+  const g = findGoal(goalId)
+  if (!g) return false
+  const kids = g.children || []
+  let c = null
+  for (let i = 0; i < kids.length; i++) if (kids[i].id === childId) c = kids[i]
+  if (!c) return false
+  if (patch.name != null) c.name = String(patch.name).trim().slice(0, 24) || c.name
+  if (patch.target != null) c.target = Math.max(1, Number(patch.target) || 1)
+  if (patch.saved != null) c.saved = Math.max(0, Number(patch.saved) || 0)
+  if (patch.priority != null) c.priority = clamp(Number(patch.priority) || 1, 1, 99)
+  c.doneAt = c.saved >= c.target ? c.doneAt || Date.now() : null
+  recalcGoal(g)
+  state.draw.tiers = generateTiers(activeGoal(), state.draw.date || todayStr(), state.settings)
+  save()
+  return true
+}
+
+/** 删除子目标：已存的钱退回大目标，不会凭空消失 */
+export function deleteChild(goalId, childId) {
+  const g = findGoal(goalId)
+  if (!g) return false
+  const kids = g.children || []
+  let target = null
+  for (let i = 0; i < kids.length; i++) if (kids[i].id === childId) target = kids[i]
+  if (!target) return false
+  g.children = kids.filter(function (c) {
+    return c.id !== childId
+  })
+  g.ownSaved = Math.round(((g.ownSaved || 0) + (target.saved || 0)) * 100) / 100
+  // 优先级重置成 1..n，避免出现断号
+  g.children.sort(function (a, b) {
+    return (a.priority || 99) - (b.priority || 99)
+  })
+  for (let i = 0; i < g.children.length; i++) g.children[i].priority = i + 1
+  recalcGoal(g)
+  state.draw.tiers = generateTiers(activeGoal(), state.draw.date || todayStr(), state.settings)
+  save()
+  return true
+}
+
+export function deleteGoal(id) {  if (state.goals.length <= 1) return false
   state.goals = state.goals.filter(function (g) {
     return g.id !== id
   })
@@ -430,6 +524,14 @@ export function updateSettings(patch) {
     }
     state.draw.tiers = generateTiers(activeGoal(), state.draw.date || todayStr(), state.settings)
   }
+  if (patch.dimX != null) state.settings.dimX = clamp(numOr(patch.dimX, 50), 0, 100)
+  if (patch.dimY != null) state.settings.dimY = clamp(numOr(patch.dimY, 20), 0, 100)
+  if (patch.dimSpread != null) state.settings.dimSpread = clamp(numOr(patch.dimSpread, 100), 60, 200)
+  if (patch.dimStrength != null) state.settings.dimStrength = clamp(numOr(patch.dimStrength, 100), 20, 180)
+  if (patch.bgZoom != null) state.settings.bgZoom = clamp(numOr(patch.bgZoom, 1), 1, 3)
+  if (patch.bgOffX != null) state.settings.bgOffX = clamp(numOr(patch.bgOffX, 0), -80, 80)
+  if (patch.bgOffY != null) state.settings.bgOffY = clamp(numOr(patch.bgOffY, 0), -80, 80)
+  if (patch.drawQuota != null) state.settings.drawQuota = patch.drawQuota === 'perGoal' ? 'perGoal' : 'shared'
   save()
 }
 

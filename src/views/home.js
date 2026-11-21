@@ -1,7 +1,7 @@
 import { activeGoal, drawRemaining, addSaving, setActiveGoal, getState } from '../state.js'
 import { fmtMoney, fmtPct, escapeHtml, openSheet, closeSheet, toast } from '../ui.js'
 import { openDraw } from './draw.js'
-import { openGoalEditor } from './goalEditor.js'
+import { openGoalEditor, openChildEditor } from './goalEditor.js'
 import { TIER_KEYS, TIER_LABEL } from '../draw.js'
 import { showCongrats } from '../congrats.js'
 
@@ -39,12 +39,13 @@ function childList(g) {
     const done = c.saved >= c.target
     const fill = pct > 0 && pct < 1.5 ? 1.5 : pct
     html +=
-      '<div class="child-item">' +
+      '<div class="child-item child-tap" data-child-id="' + c.id + '" role="button" tabindex="0">' +
       '<div class="flex-between">' +
       '<span class="child-name">' + escapeHtml(c.name) + '</span>' +
       '<span class="child-right">' +
       '<span class="child-priority">P' + (c.priority || i + 1) + '</span>' +
       '<span class="child-pct' + (done ? ' done' : '') + '">' + (done ? '已达成' : pct.toFixed(0) + '%') + '</span>' +
+      '<span class="child-edit-hint">✎</span>' +
       '</span></div>' +
       '<div class="progress thin mt-8"><div class="progress-fill" style="width:' + fill.toFixed(2) + '%"></div></div>' +
       '<div class="faint tiny mt-8">¥' + fmtMoney(c.saved) + ' / ¥' + fmtMoney(c.target) + '</div>' +
@@ -96,6 +97,7 @@ function goalCard(g) {
 function drawCard(state) {
   const remain = drawRemaining()
   const total = state.settings.dailyDraws
+  const perGoal = state.settings.drawQuota === 'perGoal'
   const tiers = state.draw.tiers
   const available = remain > 0
 
@@ -104,7 +106,7 @@ function drawCard(state) {
     '<div class="draw-entry">' +
     '<div class="draw-entry-info">' +
     '<div class="h">今天的盲盒</div>' +
-    '<div class="s">每天 ' + total + ' 次 · 攒钱路上的一点小惊喜</div>' +
+    '<div class="s">' + (perGoal ? '每个目标各 ' + total + ' 次' : '每天 ' + total + ' 次') + ' · 攒钱路上的一点小惊喜</div>' +
     '<div class="draw-badge"><span class="dot' + (available ? '' : ' off') + '"></span>' +
     (available ? '今日还剩 ' + remain + ' 次' : '今天的次数用完了，明天再来') +
     '</div>' +
@@ -183,6 +185,18 @@ export function renderHome(el) {
 
   const drawBtn = el.querySelector('[data-open-draw]')
   if (drawBtn) drawBtn.addEventListener('click', function () { openDraw() })
+
+  // 首页子目标：点一下直接改这个子目标
+  el.querySelectorAll('[data-child-id]').forEach(function (node) {
+    const cid = node.getAttribute('data-child-id')
+    node.addEventListener('click', function () { openChildEditor(g.id, cid) })
+    node.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        openChildEditor(g.id, cid)
+      }
+    })
+  })
 }
 
 function openSavingSheet(goalId) {

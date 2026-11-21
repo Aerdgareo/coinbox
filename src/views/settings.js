@@ -14,7 +14,8 @@ import {
 } from '../state.js'
 import { THEMES, BACKGROUND_MODES, PHOTO_GROUP_NAMES, PHOTO_TINTS, getTheme } from '../themes.js'
 import { fmtMoney, escapeHtml, openSheet, closeSheet, toast, confirmDialog } from '../ui.js'
-import { lighten, darken } from '../appearance.js'
+import { lighten, darken, dimGradient } from '../appearance.js'
+import { enterBgAdjust } from '../bg-transform.js'
 import { openGoalEditor } from './goalEditor.js'
 import { openBgFitSheet, fitName } from './bgfit.js'
 import { APP_VERSION, REPO_URL, RELEASES_URL } from '../version.js'
@@ -30,6 +31,7 @@ export function renderSettings(el) {
     accentSection(s) +
     photoTintSection(s) +
     backgroundSection(s) +
+    dimSection(s) +
     effectSection(s) +
     '<div class="card-title" style="padding:12px 4px 8px"><span class="t"><i>🎁</i>抽奖</span></div>' +
     drawSection(s) +
@@ -192,16 +194,60 @@ function backgroundSection(s) {
       '</div>'
   }
 
+  const zoom = Math.round((Number(s.bgZoom) || 1) * 100)
   const fitRow =
     '<div class="mt-16">' +
     '<button class="btn btn-ghost btn-block" id="bg-fit-open">显示方式 · ' + fitName(s.bgFit) + '</button>' +
     '<div class="faint tiny mt-8">决定立绘 / 图片背景怎么铺满屏幕：铺满裁切、完整显示、模糊、平铺、拉伸。</div>' +
+    '</div>' +
+    '<div class="mt-16">' +
+    '<button class="btn btn-ghost btn-block" id="bg-adjust-open">调整位置与缩放 · ' + zoom + '%</button>' +
+    '<div class="faint tiny mt-8">进入后界面会淡出，直接拖动画面平移，滚轮或双指缩放；也可以点右下角 ✥ 按钮。</div>' +
     '</div>'
 
   return (
     '<div class="card">' +
     '<div class="label">背景</div>' +
     '<div class="seg">' + seg + '</div>' + controls + fitRow +
+    '</div>'
+  )
+}
+
+function previewBg(s) {
+  if (s.bgMode === 'image') return getBgImage() || ''
+  if (s.bgMode === 'theme') {
+    const t = getTheme(s.theme)
+    return (t && t.bgImage) || ''
+  }
+  return ''
+}
+
+function dimRow(name, id, min, max, val, unit) {
+  return (
+    '<div class="dim-row"><span class="dim-k">' + name + '</span>' +
+    '<input class="rng" type="range" id="' + id + '" min="' + min + '" max="' + max + '" step="1" value="' + val + '">' +
+    '<span class="dim-v" id="' + id + '-v">' + val + unit + '</span></div>'
+  )
+}
+
+function dimSection(s) {
+  const img = previewBg(s)
+  const style =
+    (img ? 'background-image:url(&quot;' + img + '&quot;);' : '') + '--dim-layer:' + dimGradient(s) + ';'
+
+  return (
+    '<div class="card">' +
+    '<div class="card-title" style="margin-bottom:10px"><span class="t"><i>🕶</i>隐藏界面时的压暗</span>' +
+    '<span class="faint tiny">中心亮、四周暗</span></div>' +
+    '<div class="dim-pv" id="dim-pv" style="' + style + '">' +
+    '<span class="dim-pv-tag">预览 · 虚线是压暗中心</span>' +
+    '<i class="dim-pv-dot" id="dim-dot" style="left:' + Math.round(s.dimX) + '%;top:' + Math.round(s.dimY) + '%"></i>' +
+    '</div>' +
+    dimRow('中心 X', 'dim-x', 0, 100, Math.round(s.dimX), '%') +
+    dimRow('中心 Y', 'dim-y', 0, 100, Math.round(s.dimY), '%') +
+    dimRow('范围', 'dim-spread', 60, 200, Math.round(s.dimSpread), '%') +
+    dimRow('强度', 'dim-strength', 20, 180, Math.round(s.dimStrength), '%') +
+    '<div class="faint tiny mt-8" style="line-height:1.6">圆心默认在 50% / 20%——人物头部的位置，所以脸最清楚，四周和底部逐渐压暗。虚线圆圈就是圆心；想看真实效果，点右下角 👁 隐藏界面。</div>' +
     '</div>'
   )
 }
@@ -267,6 +313,12 @@ function drawSection(s) {
     '<div class="label">每天可抽次数（默认 1 次）</div>' +
     '<div class="seg">' + seg + '</div>' +
     '<div class="faint tiny mt-8">每天 0 点重置。改多改少都只影响之后的天数。</div>' +
+    '<div class="label mt-16">次数怎么算</div>' +
+    '<div class="seg">' +
+    '<button class="seg-item' + (s.drawQuota !== 'perGoal' ? ' active' : '') + '" data-quota="shared">全部目标共享</button>' +
+    '<button class="seg-item' + (s.drawQuota === 'perGoal' ? ' active' : '') + '" data-quota="perGoal">每个目标各一套</button>' +
+    '</div>' +
+    '<div class="faint tiny mt-8">共享：几个目标加起来也只有这几次；各一套：每个目标都能单独抽，奖池也按各自目标生成。</div>' +
     '<div class="label mt-16">抽奖金额范围（默认 1 ~ 100 元）</div>' +
     '<div class="flex">' +
     '<div class="grow" style="margin-right:10px">' +
@@ -278,7 +330,7 @@ function drawSection(s) {
     '<input class="input" id="draw-max" type="number" inputmode="decimal" min="1" step="1" value="' + max + '">' +
     '</div></div>' +
     '<div style="display:flex;flex-wrap:wrap;margin:2px -4px 0">' + presetHtml + '</div>' +
-    '<div class="faint tiny mt-8">奖池按这个范围生成 4 档奖金（小 / 中 / 大 / 超大），金额越大越难中。</div>' +
+    '<div class="faint tiny mt-8">奖池按这个范围生成 8 档奖金，首档是下限、末档是上限，中间档位每天重新排布；金额越大越难中。</div>' +
     '<div class="mt-16">' +
     row('提示音', '开箱和中奖时的轻音效', switchHtml('sound', s.sound !== false)) +
     '</div>' +
@@ -376,7 +428,8 @@ function bind(el) {
     n.addEventListener('click', function () {
       const id = n.getAttribute('data-theme-id')
       const t = getTheme(id)
-      const patch = { theme: id }
+      // 换图后原来的缩放 / 偏移未必适合新构图，一律回到默认
+      const patch = { theme: id, bgZoom: 1, bgOffX: 0, bgOffY: 0 }
       // 立绘背景：如果当前不在「跟随主题」，点一下自动切回去，否则点了画面没变化
       if (t && t.bgImage && getState().settings.bgMode !== 'theme') {
         patch.bgMode = 'theme'
@@ -423,6 +476,52 @@ function bind(el) {
       openBgFitSheet()
     })
   }
+
+  const adjustOpen = el.querySelector('#bg-adjust-open')
+  if (adjustOpen) {
+    adjustOpen.addEventListener('click', function () {
+      enterBgAdjust()
+    })
+  }
+
+  // 压暗：拖动时只改预览与图层，松手才写进设置（避免整页重渲染打断拖动）
+  const dimMap = [
+    ['dim-x', 'dimX'],
+    ['dim-y', 'dimY'],
+    ['dim-spread', 'dimSpread'],
+    ['dim-strength', 'dimStrength']
+  ]
+  const dimDraft = {
+    dimX: Number(s.dimX),
+    dimY: Number(s.dimY),
+    dimSpread: Number(s.dimSpread),
+    dimStrength: Number(s.dimStrength)
+  }
+  dimMap.forEach(function (pair) {
+    const input = el.querySelector('#' + pair[0])
+    if (!input) return
+    const out = el.querySelector('#' + pair[0] + '-v')
+    input.addEventListener('input', function () {
+      dimDraft[pair[1]] = Number(input.value)
+      if (out) out.textContent = input.value + '%'
+      const g = dimGradient(dimDraft)
+      const pv = el.querySelector('#dim-pv')
+      if (pv) pv.style.setProperty('--dim-layer', g)
+      const dot = el.querySelector('#dim-dot')
+      if (dot) {
+        dot.style.left = Math.round(dimDraft.dimX) + '%'
+        dot.style.top = Math.round(dimDraft.dimY) + '%'
+      }
+      const night = document.getElementById('bgNight')
+      if (night) night.style.background = g
+    })
+    input.addEventListener('change', function () {
+      const patch = {}
+      patch[pair[1]] = Number(input.value)
+      updateSettings(patch)
+    })
+  })
+
 
   el.querySelectorAll('[data-bgmode]').forEach(function (n) {
     n.addEventListener('click', function () {
@@ -489,6 +588,14 @@ function bind(el) {
     n.addEventListener('click', function () {
       updateSettings({ dailyDraws: Number(n.getAttribute('data-daily')) })
       toast('已设为每天 ' + n.getAttribute('data-daily') + ' 次')
+    })
+  })
+
+  el.querySelectorAll('[data-quota]').forEach(function (n) {
+    n.addEventListener('click', function () {
+      const mode = n.getAttribute('data-quota')
+      updateSettings({ drawQuota: mode })
+      toast(mode === 'perGoal' ? '每个目标各有一套次数' : '所有目标共用今天的次数')
     })
   })
 

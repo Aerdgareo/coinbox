@@ -1,4 +1,13 @@
-import { getState, createGoal, updateGoal, deleteGoal, findGoal, childTargetSum } from '../state.js'
+import {
+  getState,
+  createGoal,
+  updateGoal,
+  deleteGoal,
+  findGoal,
+  childTargetSum,
+  updateChild,
+  deleteChild
+} from '../state.js'
 import { fmtMoney, escapeHtml, openSheet, closeSheet, toast, confirmDialog } from '../ui.js'
 
 const EMOJIS = ['💻', '📱', '🎧', '🎮', '⌨️', '🖥️', '📷', '🎨', '🎸', '🛹', '🚲', '✈️', '🎁', '🎯', '☕', '🐱']
@@ -7,15 +16,19 @@ export function openGoalEditor(goalId) {
   const isEdit = !!goalId && !!findGoal(goalId)
   const g = isEdit ? findGoal(goalId) : { name: '', emoji: '🎯', target: 1000, saved: 0, children: [] }
 
-  let children = (g.children || []).map(function (c, i) {
-    return {
-      id: c.id,
-      name: c.name,
-      target: c.target,
-      saved: c.saved || 0,
-      priority: c.priority || i + 1
-    }
-  })
+  let children = (g.children || [])
+    .map(function (c, i) {
+      return {
+        id: c.id,
+        name: c.name,
+        target: c.target,
+        saved: c.saved || 0,
+        priority: c.priority || i + 1
+      }
+    })
+    .sort(function (a, b) {
+      return a.priority - b.priority
+    })
 
   const html =
     '<div class="field"><div class="label">目标名称</div>' +
@@ -98,8 +111,12 @@ export function openGoalEditor(goalId) {
         '<div class="child-col child-col-target"><div class="label">金额</div>' +
         '<input class="input" data-ctarget type="number" min="1" step="1" value="' + c.target + '"></div>' +
         '<div class="child-col child-col-priority"><div class="label">优先级</div>' +
-        '<input class="input" data-cpriority type="number" min="1" max="99" value="' + (c.priority || i + 1) + '"></div>' +
-        '<button class="child-del" data-cdel>✕</button>' +
+        '<div class="prio-stepper">' +
+        '<button class="prio-btn" data-cup' + (i === 0 ? ' disabled' : '') + ' aria-label="提高优先级">▲</button>' +
+        '<span class="prio-val">P' + (c.priority || i + 1) + '</span>' +
+        '<button class="prio-btn" data-cdown' + (i === children.length - 1 ? ' disabled' : '') + ' aria-label="降低优先级">▼</button>' +
+        '</div></div>' +
+        '<button class="child-del" data-cdel aria-label="删除子目标">✕</button>' +
         '</div></div>'
     }
     box.innerHTML = html
@@ -113,16 +130,43 @@ export function openGoalEditor(goalId) {
         children[idx].target = Math.max(1, Number(e.target.value) || 1)
         syncTargetInput()
       })
-      row.querySelector('[data-cpriority]').addEventListener('input', function (e) {
-        children[idx].priority = Math.max(1, Number(e.target.value) || 1)
-      })
+      const up = row.querySelector('[data-cup]')
+      if (up) {
+        up.addEventListener('click', function () {
+          moveChild(idx, -1)
+        })
+      }
+      const down = row.querySelector('[data-cdown]')
+      if (down) {
+        down.addEventListener('click', function () {
+          moveChild(idx, 1)
+        })
+      }
       row.querySelector('[data-cdel]').addEventListener('click', function () {
         children.splice(idx, 1)
+        spreadPriority()
         renderChildren()
       })
     })
     syncTargetInput()
   }
+
+  /** 上下键交换：整行与邻居换位，优先级重新编号成 1..n */
+  function moveChild(idx, dir) {
+    const j = idx + dir
+    if (idx < 0 || j < 0 || j >= children.length) return
+    const next = children.slice()
+    const item = next.splice(idx, 1)[0]
+    next.splice(j, 0, item)
+    children = next
+    spreadPriority()
+    renderChildren()
+  }
+
+  function spreadPriority() {
+    for (let i = 0; i < children.length; i++) children[i].priority = i + 1
+  }
+
   renderChildren()
 
   sheet.querySelector('#child-add').addEventListener('click', function () {
@@ -184,4 +228,102 @@ export function openGoalEditor(goalId) {
 
 export function openGoalDetail(goalId) {
   openGoalEditor(goalId)
+}
+
+/** 首页点某个子目标：直接改这一条，不用进整份目标编辑 */
+export function openChildEditor(goalId, childId) {
+  const g = findGoal(goalId)
+  if (!g) return
+  const kids = (g.children || []).slice().sort(function (a, b) {
+    return (a.priority || 99) - (b.priority || 99)
+  })
+  let idx = -1
+  for (let i = 0; i < kids.length; i++) if (kids[i].id === childId) idx = i
+  if (idx < 0) return
+  const c = kids[idx]
+  const pct = c.target > 0 ? Math.min(100, (c.saved / c.target) * 100) : 0
+
+  const html =
+    '<div class="field"><div class="label">子目标名称</div>' +
+    '<input class="input" id="c-name" maxlength="24" value="' + escapeHtml(c.name) + '"></div>' +
+    '<div class="flex">' +
+    '<div class="grow" style="margin-right:10px"><div class="label">目标金额（元）</div>' +
+    '<input class="input" id="c-target" type="number" inputmode="decimal" min="1" step="1" value="' + c.target + '"></div>' +
+    '<div class="grow"><div class="label">已存（元）</div>' +
+    '<input class="input" id="c-saved" type="number" inputmode="decimal" min="0" step="0.01" value="' + (c.saved || 0) + '"></div>' +
+    '</div>' +
+    '<div class="row mt-12"><div class="row-main"><div class="row-text">' +
+    '<div class="row-title">优先级</div>' +
+    '<div class="row-sub">数字越小越先分到钱</div></div></div>' +
+    '<div class="prio-stepper" style="width:92px">' +
+    '<button class="prio-btn" id="c-pup" aria-label="提高优先级">▲</button>' +
+    '<span class="prio-val" id="c-prio">P' + (idx + 1) + '</span>' +
+    '<button class="prio-btn" id="c-pdown" aria-label="降低优先级">▼</button>' +
+    '</div></div>' +
+    '<div class="faint tiny mt-8">在「' + escapeHtml(g.name) + '」里占 ' + pct.toFixed(0) + '%，' +
+    '已完成 ¥' + fmtMoney(c.saved) + ' / ¥' + fmtMoney(c.target) + '</div>' +
+    '<button class="btn btn-primary btn-block mt-16" id="c-save">保存</button>' +
+    '<button class="btn btn-ghost btn-block mt-12" id="c-del" style="color:var(--bad)">删除这个子目标</button>'
+
+  const sheet = openSheet(html, { title: '编辑子目标' })
+  if (!sheet) return
+
+  const nameEl = sheet.querySelector('#c-name')
+  const targetEl = sheet.querySelector('#c-target')
+  const savedEl = sheet.querySelector('#c-saved')
+  const prioEl = sheet.querySelector('#c-prio')
+
+  function refreshPrio() {
+    const now = findGoal(goalId)
+    if (!now) return
+    const list = (now.children || []).slice().sort(function (a, b) {
+      return (a.priority || 99) - (b.priority || 99)
+    })
+    for (let i = 0; i < list.length; i++) if (list[i].id === childId) prioEl.textContent = 'P' + (i + 1)
+  }
+
+  function move(dir) {
+    const now = findGoal(goalId)
+    if (!now) return
+    const list = (now.children || []).slice().sort(function (a, b) {
+      return (a.priority || 99) - (b.priority || 99)
+    })
+    let i = -1
+    for (let k = 0; k < list.length; k++) if (list[k].id === childId) i = k
+    const j = i + dir
+    if (i < 0 || j < 0 || j >= list.length) return
+    const tmp = list[i]
+    list[i] = list[j]
+    list[j] = tmp
+    for (let k = 0; k < list.length; k++) list[k].priority = k + 1
+    updateGoal(goalId, { children: list })
+    refreshPrio()
+  }
+
+  sheet.querySelector('#c-pup').addEventListener('click', function () { move(-1) })
+  sheet.querySelector('#c-pdown').addEventListener('click', function () { move(1) })
+
+  sheet.querySelector('#c-save').addEventListener('click', function () {
+    const name = nameEl.value.trim()
+    if (!name) { toast('子目标要有名字'); return }
+    const target = Number(targetEl.value)
+    if (!target || target <= 0) { toast('金额要大于 0'); return }
+    updateChild(goalId, childId, {
+      name: name,
+      target: target,
+      saved: Number(savedEl.value) || 0
+    })
+    closeSheet()
+    toast('子目标已更新')
+  })
+
+  sheet.querySelector('#c-del').addEventListener('click', function () {
+    closeSheet()
+    setTimeout(function () {
+      confirmDialog('删除子目标', '删掉后，已存进这个子目标的钱会退回大目标，不会消失。确定吗？', true).then(function (ok) {
+        if (!ok) return
+        if (deleteChild(goalId, childId)) toast('已删除，钱已退回大目标')
+      })
+    }, 220)
+  })
 }
