@@ -1,4 +1,5 @@
 import { generateTiers, rollTier, clamp } from './draw.js'
+import * as bgStore from './bg-store.js'
 
 const STORE_KEY = 'coinbox.state.v2'
 const IMG_KEY = 'coinbox.bgimage.v1'
@@ -666,39 +667,41 @@ export function setCharImage(themeId, dataUrl) {
   safeSet(CHAR_KEY + themeId, dataUrl)
 }
 
-/* ---------------- 用户自添背景：可以存多张、逐张删除 ---------------- */
+/* ---------------- 用户自添背景：IndexedDB 存图，内存只留 objectURL ---------------- */
 
-let userBgList = null
+/** 内存视图：[{ id, name, addedAt, size, url, thumbUrl }]，url 是 blob: 地址 */
+let userBgList = []
+let userBgReady = false
+let userBgLoading = null
+let bgBackend = 'idb' // 'idb' | 'ls'（打不开 IndexedDB 时退回 localStorage）
 
-function loadUserBgs() {
-  if (userBgList) return userBgList
-  let arr = []
+function revokeItem(it) {
+  if (!it) return
   try {
-    arr = JSON.parse(safeGet(USERBG_KEY) || '[]')
-  } catch (e) {
-    arr = []
-  }
-  if (!Array.isArray(arr)) arr = []
-  arr = arr.filter(function (b) {
-    return b && b.id && b.data
-  })
-  if (!arr.length) {
-    // 旧版本只能存一张，迁移成「用户自添」里的第一张
-    const legacy = safeGet(IMG_KEY)
-    if (legacy) {
-      arr = [{ id: 'ub_legacy', name: '我的背景', data: legacy, thumb: legacy, addedAt: Date.now() }]
-      persistUserBgs(arr)
-      try {
-        localStorage.removeItem(IMG_KEY)
-      } catch (e) {}
-      memoryFallback[IMG_KEY] = null
+    if (it.url && it.url.indexOf('blob:') === 0) URL.revokeObjectURL(it.url)
+  } catch (e) {}
+  try {
+    if (it.thumbUrl && it.thumbUrl !== it.url && it.thumbUrl.indexOf('blob:') === 0) {
+      URL.revokeObjectURL(it.thumbUrl)
     }
-  }
-  userBgList = arr
-  return arr
+  } catch (e) {}
 }
 
-function persistUserBgs(arr) {
+/** 同步读：migrate / updateSettings 用。预热没跑完时是空数组，交完就是全量 */
+function loadUserBgs() {
+  return userBgList
+}
+
+function legacyPersist(list) {
+  const arr = list.map(function (b) {
+    return {
+      id: b.id,
+      name: b.name,
+      data: b.data || b.url,
+      thumb: b.thumbData || b.thumbUrl || b.data || b.url,
+      addedAt: b.addedAt
+    }
+  })
   try {
     localStorage.setItem(USERBG_KEY, JSON.stringify(arr))
     return true
@@ -707,58 +710,275 @@ function persistUserBgs(arr) {
   }
 }
 
+function readLegacyBgs() {
+  let arr = []
+  try {
+    arr = JSON.parse(safeGet(USERBG_KEY) || '[]')
+  } catch (e) {
+    arr = []
+  }
+  if (!Array.isArray(arr)) arr = []
+  const out = []
+  for (let i = 0; i < arr.length; i++) {
+    const b = arr[i]
+    if (!b || !b.id || !b.data) continue
+    const thumb = b.thumb || b.data
+    out.push({
+      id: String(b.id),
+      name: String(b.name || '我的背景').slice(0, 24),
+      addedAt: Number(b.addedAt) || Date.now(),
+      size: 0,
+      data: b.data,
+      thumbData: thumb,
+      url: b.data,
+      thumbUrl: thumb
+    })
+  }
+  if (!out.length) {
+    const legacy = safeGet(IMG_KEY)
+    if (legacy) {
+      out.push({
+        id: 'ub_legacy',
+        name: '我的背景',
+        addedAt: Date.now(),
+        size: 0,
+        data: legacy,
+        thumbData: legacy,
+        url: legacy,
+        thumbUrl: legacy
+      })
+      legacyPersist(out)
+      try { localStorage.removeItem(IMG_KEY) } catch (e) {}
+      memoryFallback[IMG_KEY] = null
+    }
+  }
+  return out
+}
+
+/**
+ * 把 localStorage 里的旧数据搬进 IndexedDB。
+ * 幂等：按 id 跳过已有的，中途失败不清旧键，下次启动接着搬。
+ */
+async function syncLegacyToIdb(existing) {
+  let arr = null
+  try {
+    arr = JSON.parse(safeGet(USERBG_KEY) || 'null')
+  } catch (e) {
+    arr = null
+  }
+  let src = Array.isArray(arr)
+    ? arr.filter(function (b) { return b && b.id && b.data })
+    : []
+  if (!src.length) {
+    const one = safeGet(IMG_KEY)
+    if (one) src = [{ id: 'ub_legacy', name: '我的背景', data: one, addedAt: Date.now() }]
+  }
+  if (!src.length) return existing
+
+  const have = {}
+  for (let i = 0; i < existing.length; i++) have[existing[i].id] = 1
+
+  const added = []
+  let failed = false
+  for (let i = 0; i < src.length; i++) {
+    const b = src[i]
+    if (have[b.id]) continue
+    const blob = bgStore.dataUrlToBlob(b.data)
+    if (!blob) continue
+    const tb = b.thumb && b.thumb !== b.data ? bgStore.dataUrlToBlob(b.thumb) : blob
+    const meta = {
+      id: String(b.id),
+      name: String(b.name || '我的背景').slice(0, 24),
+      addedAt: Number(b.addedAt) || Date.now(),
+      size: blob.size || 0
+    }
+    try {
+      await bgStore.putBg({
+        id: meta.id,
+        name: meta.name,
+        addedAt: meta.addedAt,
+        size: meta.size,
+        blob: blob,
+        thumb: tb || blob
+      })
+      added.push(meta)
+      have[meta.id] = 1
+    } catch (e) {
+      failed = true
+      break
+    }
+  }
+
+  // 确认旧数据全部有着落，才删掉旧键（否则保留，下次继续）
+  if (!failed) {
+    try { localStorage.removeItem(USERBG_KEY) } catch (e) {}
+    memoryFallback[USERBG_KEY] = null
+    try { localStorage.removeItem(IMG_KEY) } catch (e) {}
+    memoryFallback[IMG_KEY] = null
+  }
+  return existing.concat(added)
+}
+
+/**
+ * 预热：读取索引 + 图片，生成 objectURL 填进内存。
+ * main.js 在首次渲染前 await 它，之后所有读路径都是同步的。
+ */
+export function initUserBgs() {
+  if (userBgLoading) return userBgLoading
+  userBgLoading = (async function () {
+    const ok = await bgStore.probe()
+    if (!ok) {
+      bgBackend = 'ls'
+      userBgList = readLegacyBgs()
+      userBgReady = true
+      return userBgList
+    }
+
+    let metas = []
+    try {
+      metas = await bgStore.getAllMeta()
+    } catch (e) {
+      metas = []
+    }
+    metas = await syncLegacyToIdb(metas)
+
+    const list = []
+    for (let i = 0; i < metas.length; i++) {
+      const m = metas[i]
+      try {
+        const blob = await bgStore.getBlob(m.id)
+        if (!blob) continue
+        const url = URL.createObjectURL(blob)
+        const th = await bgStore.getThumb(m.id)
+        const thumbUrl = th ? URL.createObjectURL(th) : url
+        list.push({
+          id: m.id,
+          name: m.name || '我的背景',
+          addedAt: Number(m.addedAt) || 0,
+          size: Number(m.size) || 0,
+          url: url,
+          thumbUrl: thumbUrl
+        })
+      } catch (e) {
+        // 这一张读不出来就跳过，不让整页挂掉
+      }
+    }
+
+    userBgList.forEach(revokeItem)
+    userBgList = list
+    userBgReady = true
+
+    // 运行中重新预热时校正选中项；首次启动交给 migrate()
+    if (state && state.settings) {
+      const has = list.some(function (b) { return b.id === state.settings.userBgId })
+      if (!has) {
+        state.settings.userBgId = list.length ? list[0].id : ''
+        if (!list.length && state.settings.bgMode === 'image') state.settings.bgMode = 'theme'
+        save()
+      }
+    }
+
+    bgStore.requestPersist()
+    return list
+  })()
+  return userBgLoading
+}
+
+export function userBgsReady() {
+  return userBgReady
+}
+
+export function userBgBackend() {
+  return bgBackend
+}
+
+/** 列表 + 占用空间，设置页显示「已存 N 张 · 共 x MB」 */
+export function userBgUsage() {
+  let bytes = 0
+  for (let i = 0; i < userBgList.length; i++) bytes += userBgList[i].size || 0
+  return { count: userBgList.length, bytes: bytes }
+}
+
 export function listUserBgs() {
-  return loadUserBgs().slice()
+  return userBgList.slice()
 }
 
 export function getActiveUserBg() {
-  const arr = loadUserBgs()
-  if (!arr.length) return null
+  if (!userBgList.length) return null
   const id = state && state.settings ? state.settings.userBgId : ''
-  for (let i = 0; i < arr.length; i++) {
-    if (arr[i].id === id) return arr[i]
+  for (let i = 0; i < userBgList.length; i++) {
+    if (userBgList[i].id === id) return userBgList[i]
   }
-  return arr[0]
+  return userBgList[0]
 }
 
-/** 加一张自添背景；本地存储写不进去（配额满）时返回 null */
-export function addUserBg(data, thumb, name) {
-  if (!data) return null
-  const arr = loadUserBgs()
+/** 加一张自添背景：blob 全图 + 可选缩略图 Blob；存不进去返回 null */
+export async function addUserBg(blob, thumbBlob, name) {
+  if (!blob) return null
   const item = {
     id: uid('ub'),
-    name: String(name || '我的背景 ' + (arr.length + 1)).slice(0, 24),
-    data: data,
-    thumb: thumb || data,
-    addedAt: Date.now()
+    name: String(name || '我的背景 ' + (userBgList.length + 1)).slice(0, 24),
+    addedAt: Date.now(),
+    size: blob.size || 0
   }
-  arr.push(item)
-  if (!persistUserBgs(arr)) {
-    arr.pop()
-    return null
+
+  if (bgBackend === 'idb') {
+    try {
+      await bgStore.putBg({
+        id: item.id,
+        name: item.name,
+        addedAt: item.addedAt,
+        size: item.size,
+        blob: blob,
+        thumb: thumbBlob || blob
+      })
+    } catch (e) {
+      return null
+    }
+    item.url = URL.createObjectURL(blob)
+    item.thumbUrl = thumbBlob ? URL.createObjectURL(thumbBlob) : item.url
+  } else {
+    const data = await bgStore.blobToDataUrl(blob)
+    if (!data) return null
+    const thumb = thumbBlob ? await bgStore.blobToDataUrl(thumbBlob) : data
+    item.data = data
+    item.thumbData = thumb
+    item.url = data
+    item.thumbUrl = thumb
+    if (!legacyPersist(userBgList.concat([item]))) return null
   }
+
+  userBgList.push(item)
   return item
 }
 
-export function removeUserBg(id) {
-  const arr = loadUserBgs()
+export async function removeUserBg(id) {
   let at = -1
-  for (let i = 0; i < arr.length; i++) {
-    if (arr[i].id === id) {
+  for (let i = 0; i < userBgList.length; i++) {
+    if (userBgList[i].id === id) {
       at = i
       break
     }
   }
   if (at < 0) return false
-  const item = arr.splice(at, 1)[0]
-  if (!persistUserBgs(arr)) {
-    arr.splice(at, 0, item)
-    return false
+
+  if (bgBackend === 'idb') {
+    try {
+      await bgStore.delBg(id)
+    } catch (e) {
+      return false
+    }
+  } else {
+    const rest = userBgList.slice(0, at).concat(userBgList.slice(at + 1))
+    if (!legacyPersist(rest)) return false
   }
+
+  const item = userBgList.splice(at, 1)[0]
+  revokeItem(item)
   if (state.settings.dimPresets) delete state.settings.dimPresets['user:' + id]
   if (state.settings.userBgId === id) {
-    state.settings.userBgId = arr.length ? arr[0].id : ''
-    if (!arr.length && state.settings.bgMode === 'image') state.settings.bgMode = 'theme'
+    state.settings.userBgId = userBgList.length ? userBgList[0].id : ''
+    if (!userBgList.length && state.settings.bgMode === 'image') state.settings.bgMode = 'theme'
   }
   save()
   return true
@@ -767,17 +987,51 @@ export function removeUserBg(id) {
 /** 当前选中的自添背景图（appearance / bg-transform 都走这里） */
 export function getBgImage() {
   const b = getActiveUserBg()
-  return b ? b.data : ''
+  return b ? b.url || b.data || '' : ''
 }
 
-export function exportData() {
+/** 导出备份：图片从 IndexedDB 读回、转成 base64 塞进 JSON，格式与旧版一致 */
+export async function exportData() {
   const data = JSON.parse(JSON.stringify(state))
-  data.bgImage = getBgImage() || ''
-  data.userBgs = listUserBgs()
+  const cur = getActiveUserBg()
+  const out = []
+  for (let i = 0; i < userBgList.length; i++) {
+    const b = userBgList[i]
+    let d = b.data || ''
+    let t = b.thumbData || ''
+    if (!d) {
+      try {
+        const blob = await bgStore.getBlob(b.id)
+        d = blob ? await bgStore.blobToDataUrl(blob) : ''
+      } catch (e) {
+        d = ''
+      }
+    }
+    if (!t && d) {
+      try {
+        const th = await bgStore.getThumb(b.id)
+        t = th ? await bgStore.blobToDataUrl(th) : d
+      } catch (e) {
+        t = d
+      }
+    }
+    if (!d) continue
+    out.push({ id: b.id, name: b.name, addedAt: b.addedAt, data: d, thumb: t || d })
+  }
+  data.userBgs = out
+  data.bgImage = ''
+  if (cur) {
+    for (let i = 0; i < out.length; i++) {
+      if (out[i].id === cur.id) {
+        data.bgImage = out[i].data
+        break
+      }
+    }
+  }
   return JSON.stringify(data, null, 2)
 }
 
-export function importData(text) {
+export async function importData(text) {
   let obj
   try {
     obj = JSON.parse(text)
@@ -785,48 +1039,97 @@ export function importData(text) {
     return false
   }
   if (!obj || !Array.isArray(obj.goals) || obj.goals.length === 0) return false
+
   const bg = obj.bgImage || ''
-  const bgs = Array.isArray(obj.userBgs)
+  let bgs = Array.isArray(obj.userBgs)
     ? obj.userBgs.filter(function (b) {
         return b && b.id && b.data
       })
     : []
+  if (!bgs.length && bg) {
+    bgs = [{ id: 'ub_import', name: '导入的背景', data: bg, thumb: bg, addedAt: Date.now() }]
+  }
   delete obj.bgImage
   delete obj.userBgs
 
-  // 先恢复图片库，migrate 里要用它校正 userBgId
-  if (bgs.length) {
-    userBgList = bgs.map(function (b) {
-      return {
-        id: String(b.id),
-        name: String(b.name || '我的背景').slice(0, 24),
-        data: b.data,
-        thumb: b.thumb || b.data,
-        addedAt: Number(b.addedAt) || Date.now()
-      }
-    })
-    persistUserBgs(userBgList)
-  } else if (bg) {
-    userBgList = [{ id: 'ub_import', name: '导入的背景', data: bg, thumb: bg, addedAt: Date.now() }]
-    persistUserBgs(userBgList)
-    obj.settings = obj.settings || {}
-    obj.settings.userBgId = 'ub_import'
+  // 备份是整份替换：先清空现有图库
+  if (bgBackend === 'idb') {
+    try {
+      await bgStore.clearAll()
+    } catch (e) {
+      return false
+    }
   }
+  userBgList.forEach(revokeItem)
+  userBgList = []
+
+  const next = []
+  for (let i = 0; i < bgs.length; i++) {
+    const b = bgs[i]
+    const blob = bgStore.dataUrlToBlob(b.data)
+    if (!blob) continue
+    const tb = b.thumb && b.thumb !== b.data ? bgStore.dataUrlToBlob(b.thumb) : blob
+    const item = {
+      id: String(b.id),
+      name: String(b.name || '我的背景').slice(0, 24),
+      addedAt: Number(b.addedAt) || Date.now(),
+      size: blob.size || 0
+    }
+    if (bgBackend === 'idb') {
+      try {
+        await bgStore.putBg({
+          id: item.id,
+          name: item.name,
+          addedAt: item.addedAt,
+          size: item.size,
+          blob: blob,
+          thumb: tb || blob
+        })
+      } catch (e) {
+        continue
+      }
+      item.url = URL.createObjectURL(blob)
+      item.thumbUrl = tb ? URL.createObjectURL(tb) : item.url
+    } else {
+      item.data = b.data
+      item.thumbData = b.thumb || b.data
+      item.url = b.data
+      item.thumbUrl = item.thumbData
+    }
+    next.push(item)
+  }
+
+  userBgList = next
+  if (bgBackend !== 'idb') legacyPersist(next)
 
   state = migrate(obj)
   if (!findGoal(state.activeGoal)) state.activeGoal = state.goals[0].id
+  // 备份里指向的那张没导进来，就落到第一张
+  const hasCur = state.settings.userBgId
+    ? next.some(function (b) { return b.id === state.settings.userBgId })
+    : false
+  if (!hasCur) {
+    state.settings.userBgId = next.length ? next[0].id : ''
+    if (!next.length && state.settings.bgMode === 'image') state.settings.bgMode = 'theme'
+  }
   refreshDaily(true)
   save()
   return true
 }
 
-export function resetAll() {
+export async function resetAll() {
   state = defaultState()
   refreshDaily(true)
+  userBgList.forEach(revokeItem)
   userBgList = []
   try {
     localStorage.removeItem(USERBG_KEY)
   } catch (e) {}
   memoryFallback[USERBG_KEY] = null
+  if (bgBackend === 'idb') {
+    try {
+      await bgStore.clearAll()
+    } catch (e) {}
+  }
   save()
 }

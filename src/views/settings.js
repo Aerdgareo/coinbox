@@ -11,6 +11,7 @@ import {
   addUserBg,
   removeUserBg,
   getActiveUserBg,
+  userBgUsage,
   currentBgKey,
   resetDimForCurrentBg,
   exportData,
@@ -90,6 +91,7 @@ function themeSection(s) {
 
 function userBgGroup(s) {
   const list = listUserBgs()
+  const usage = userBgUsage()
   const active = s.bgMode === 'image' ? getActiveUserBg() : null
   const activeId = active ? active.id : ''
   // 这一组常驻展开：新用户靠它找到「添加图片」入口
@@ -101,14 +103,15 @@ function userBgGroup(s) {
     const on = activeId === b.id
     const when = new Date(Number(b.addedAt) || Date.now())
     const date = when.getMonth() + 1 + '-' + when.getDate()
+    const size = b.size ? ' · ' + fmtSize(b.size) : ''
     cards +=
       '<div class="theme-card' + (on ? ' active' : '') + '">' +
       '<div class="theme-card-inner" data-usebg="' + b.id + '"' +
-      ' style="background:linear-gradient(rgba(6,8,14,0.22),rgba(6,8,14,0.6)),url(&quot;' + (b.thumb || b.data) + '&quot;) center 18%/cover;">' +
+      ' style="background:linear-gradient(rgba(6,8,14,0.22),rgba(6,8,14,0.6)),url(&quot;' + (b.thumbUrl || b.url) + '&quot;) center 18%/cover;">' +
       '<span class="tc-check">✓</span>' +
       '<button class="tc-del" data-delbg="' + b.id + '" title="删除这张">×</button>' +
       '<div class="tc-name">' + escapeHtml(b.name) + '</div>' +
-      '<div class="tc-sub">自添 · ' + date + '</div>' +
+      '<div class="tc-sub">自添 · ' + date + size + '</div>' +
       '</div></div>'
   }
   cards +=
@@ -127,7 +130,9 @@ function userBgGroup(s) {
       ? ''
       : '<div class="faint tiny" style="padding:2px 0 8px;line-height:1.6">还没有自己的背景。添加后每张单独保存，可以随时切换或删掉。</div>') +
     '<div class="theme-grid">' + cards + '</div>' +
-    '<div class="faint tiny mt-8" style="line-height:1.6">图片压缩后存在本机（约 5MB 额度，大概 8~12 张），不上传；点卡片左上角 × 可以删掉。</div>' +
+    '<div class="faint tiny mt-8" style="line-height:1.6">图片压缩后存在本机（IndexedDB，按磁盘算，几百张都放得下），不上传；点卡片左上角 × 可以删掉。' +
+    (usage.count ? '当前 ' + usage.count + ' 张，共 ' + fmtSize(usage.bytes) + '。' : '') +
+    '</div>' +
     '</div></div>'
   )
 }
@@ -241,7 +246,7 @@ function backgroundSection(s) {
       '<div class="mt-16">' +
       (cur
         ? '<div class="ub-current">' +
-          '<div class="ub-thumb" style="background-image:url(&quot;' + (cur.thumb || cur.data) + '&quot;)"></div>' +
+          '<div class="ub-thumb" style="background-image:url(&quot;' + (cur.thumbUrl || cur.url) + '&quot;)"></div>' +
           '<div class="ub-meta"><div class="row-title">' + escapeHtml(cur.name) + '</div>' +
           '<div class="row-sub">用户自添 · 共 ' + count + ' 张</div></div></div>'
         : '<div class="faint tiny" style="line-height:1.6">还没添加过图片，点下面按钮加一张。</div>') +
@@ -635,14 +640,20 @@ function bind(el) {
       const item = listUserBgs().filter(function (b) {
         return b.id === id
       })[0]
-      confirmDialog('删除「' + (item ? item.name : '这张背景') + '」？', '删掉后需要重新添加，其他背景不受影响。', true).then(function (ok) {
+      confirmDialog('删除「' + (item ? item.name : '这张背景') + '」？', '删掉后需要重新添加，其他背景不受影响。', true).then(async function (ok) {
         if (!ok) return
         const wasCurrent = getState().settings.bgMode === 'image' && getState().settings.userBgId === id
-        if (removeUserBg(id)) {
+        let done = false
+        try {
+          done = await removeUserBg(id)
+        } catch (e) {
+          done = false
+        }
+        if (done) {
           if (wasCurrent) toast('已删除，切换到下一张')
           else toast('已删除')
         } else {
-          toast('删除失败，本地存储不可写')
+          toast('删除失败，稍后再试')
         }
       })
     })
@@ -801,9 +812,9 @@ function bind(el) {
   const rst = el.querySelector('[data-reset]')
   if (rst) {
     rst.addEventListener('click', function () {
-      confirmDialog('清空所有数据', '目标、进度、抽奖记录都会删除，且无法恢复。建议先导出备份。', true).then(function (ok) {
+      confirmDialog('清空所有数据', '目标、进度、抽奖记录都会删除，且无法恢复。建议先导出备份。', true).then(async function (ok) {
         if (ok) {
-          resetAll()
+          await resetAll()
           toast('已清空')
         }
       })
@@ -829,8 +840,7 @@ function showUpdateResult(info) {
   })
 }
 
-function showExport() {
-  const text = exportData()
+async function showExport() {
   const sheet = openSheet(
     '<div class="label">备份内容（可复制保存）</div>' +
     '<textarea class="input" id="exp-text" style="height:160px;font-size:11px" readonly></textarea>' +
@@ -841,10 +851,23 @@ function showExport() {
     { title: '导出备份' }
   )
   if (!sheet) return
-  sheet.querySelector('#exp-text').value = text
+
+  const ta = sheet.querySelector('#exp-text')
+  ta.value = '正在把背景图打包进备份，图多的话要几秒…'
+
+  let text = ''
+  try {
+    text = await exportData()
+  } catch (e) {
+    text = ''
+  }
+  ta.value = text || '（导出失败，稍后重试）'
 
   sheet.querySelector('#exp-copy').addEventListener('click', function () {
-    const ta = sheet.querySelector('#exp-text')
+    if (!text) {
+      toast('还没有内容')
+      return
+    }
     ta.select()
     try {
       document.execCommand('copy')
@@ -855,6 +878,10 @@ function showExport() {
   })
 
   sheet.querySelector('#exp-download').addEventListener('click', function () {
+    if (!text) {
+      toast('还没有内容')
+      return
+    }
     try {
       const blob = new Blob([text], { type: 'application/json' })
       const a = document.createElement('a')
@@ -897,10 +924,21 @@ function showImport() {
     r.readAsText(f)
   })
 
-  sheet.querySelector('#imp-do').addEventListener('click', function () {
+  sheet.querySelector('#imp-do').addEventListener('click', async function () {
     const text = sheet.querySelector('#imp-text').value
     if (!text) { toast('还没有内容'); return }
-    if (importData(text)) {
+    const btn = sheet.querySelector('#imp-do')
+    btn.textContent = '正在导入…'
+    btn.disabled = true
+    let ok = false
+    try {
+      ok = await importData(text)
+    } catch (e) {
+      ok = false
+    }
+    btn.textContent = '导入并覆盖'
+    btn.disabled = false
+    if (ok) {
       closeSheet()
       toast('导入成功')
     } else {
@@ -909,75 +947,106 @@ function showImport() {
   })
 }
 
+/** 422KB → 412KB / 1.4MB */
+function fmtSize(bytes) {
+  const n = Number(bytes) || 0
+  if (n < 1024) return n + 'B'
+  if (n < 1048576) return Math.round(n / 1024) + 'KB'
+  return (n / 1048576).toFixed(1) + 'MB'
+}
+
 /**
- * 导入一张或多张背景：压缩成大图 + 小缩略图，逐张存进「用户自添」
- * cb 收到 null 表示这张读不出来
+ * 导入一张或多张背景：压缩成大图 + 小缩略图，逐张写进 IndexedDB
  */
-function importBgFiles(files) {
+async function importBgFiles(files) {
   const list = Array.prototype.slice.call(files || [])
   if (!list.length) return
-  let pending = list.length
+
+  const total = list.length
+  if (total > 1) toast('正在处理 ' + total + ' 张图片…')
+
   let last = null
   let failed = 0
-  list.forEach(function (f) {
-    compressImage(f, function (out) {
-      if (out) {
-        const name = String(f.name || '').replace(/\.[^./\\]+$/, '').slice(0, 24)
-        const item = addUserBg(out.data, out.thumb, name)
-        if (item) last = item
-        else failed++
-      } else {
-        failed++
+  let noSpace = 0
+
+  for (let i = 0; i < total; i++) {
+    const f = list[i]
+    const out = await prepareImageBlob(f)
+    if (!out) {
+      failed++
+      continue
+    }
+    const name = String(f.name || '').replace(/\.[^./\\]+$/, '').slice(0, 24)
+    const item = await addUserBg(out.blob, out.thumbBlob, name)
+    if (item) {
+      last = item
+    } else {
+      failed++
+      noSpace++
+    }
+  }
+
+  if (last) {
+    updateSettings({ bgMode: 'image', userBgId: last.id, bgZoom: 1, bgOffX: 0, bgOffY: 0 })
+  }
+  if (failed) {
+    if (noSpace) toast('本机空间不足，' + noSpace + ' 张没存上；先删掉几张再加')
+    else if (failed === total) toast('这些图读不出来，换几张试试')
+    else toast('有 ' + failed + ' 张没读出来，其余已添加')
+  } else {
+    toast(total > 1 ? '已添加 ' + total + ' 张背景' : '已添加背景')
+  }
+}
+
+/** 读文件 → 最长边 1440 的 JPEG Blob + 360px 缩略图 Blob */
+function prepareImageBlob(file) {
+  return new Promise(function (resolve) {
+    const reader = new FileReader()
+    reader.onerror = function () { resolve(null) }
+    reader.onload = function (e) {
+      const img = new Image()
+      img.onerror = function () { resolve(null) }
+      img.onload = function () {
+        const max = 1440
+        let w = img.width
+        let h = img.height
+        if (!w || !h) { resolve(null); return }
+        if (w > max || h > max) {
+          const k = Math.min(max / w, max / h)
+          w = Math.round(w * k)
+          h = Math.round(h * k)
+        }
+        const c = document.createElement('canvas')
+        c.width = w
+        c.height = h
+        const ctx = c.getContext('2d')
+        ctx.drawImage(img, 0, 0, w, h)
+
+        // 列表里的缩略图单独做一份，避免把几百 KB 的大图塞进每一张卡片
+        const k2 = Math.min(1, 360 / Math.max(w, h))
+        const tc = document.createElement('canvas')
+        tc.width = Math.max(1, Math.round(w * k2))
+        tc.height = Math.max(1, Math.round(h * k2))
+        tc.getContext('2d').drawImage(c, 0, 0, tc.width, tc.height)
+
+        let left = 2
+        let blob = null
+        let thumbBlob = null
+        const done = function () {
+          left--
+          if (left > 0) return
+          if (!blob) {
+            resolve(null)
+            return
+          }
+          resolve({ blob: blob, thumbBlob: thumbBlob || blob })
+        }
+        c.toBlob(function (b) { blob = b; done() }, 'image/jpeg', 0.72)
+        tc.toBlob(function (b) { thumbBlob = b; done() }, 'image/jpeg', 0.62)
       }
-      pending--
-      if (pending > 0) return
-      if (last) {
-        updateSettings({ bgMode: 'image', userBgId: last.id, bgZoom: 1, bgOffX: 0, bgOffY: 0 })
-      }
-      if (failed) {
-        toast(failed === list.length ? '这些图读不出来，换几张试试' : '本地存储空间不足，' + failed + ' 张没存上；先删掉几张再加')
-      } else {
-        toast(list.length > 1 ? '已添加 ' + list.length + ' 张背景' : '已添加背景')
-      }
-    })
+      img.src = e.target.result
+    }
+    reader.readAsDataURL(file)
   })
 }
 
-function compressImage(file, cb) {
-  const reader = new FileReader()
-  reader.onerror = function () { cb(null) }
-  reader.onload = function (e) {
-    const img = new Image()
-    img.onerror = function () { cb(null) }
-    img.onload = function () {
-      const max = 1440
-      let w = img.width
-      let h = img.height
-      if (!w || !h) { cb(null); return }
-      if (w > max || h > max) {
-        const k = Math.min(max / w, max / h)
-        w = Math.round(w * k)
-        h = Math.round(h * k)
-      }
-      const c = document.createElement('canvas')
-      c.width = w
-      c.height = h
-      const ctx = c.getContext('2d')
-      ctx.drawImage(img, 0, 0, w, h)
-      const data = c.toDataURL('image/jpeg', 0.72)
-
-      // 列表里的缩略图单独做一份，避免把几百 KB 的大图塞进每一张卡片
-      const k2 = Math.min(1, 360 / Math.max(w, h))
-      const tc = document.createElement('canvas')
-      tc.width = Math.max(1, Math.round(w * k2))
-      tc.height = Math.max(1, Math.round(h * k2))
-      const tctx = tc.getContext('2d')
-      tctx.drawImage(c, 0, 0, tc.width, tc.height)
-      const thumb = tc.toDataURL('image/jpeg', 0.62)
-
-      cb({ data: data, thumb: thumb })
-    }
-    img.src = e.target.result
-  }
-  reader.readAsDataURL(file)
-}

@@ -1,4 +1,4 @@
-import { init, subscribe, getState, updateSettings, refreshDaily, notify, todayStr } from './state.js'
+import { init, subscribe, getState, updateSettings, refreshDaily, notify, todayStr, initUserBgs } from './state.js'
 import { applyAppearance } from './appearance.js'
 import { initParticles } from './particles.js'
 import { initEffects } from './effects.js'
@@ -80,10 +80,17 @@ function go(id) {
   window.scrollTo(0, 0)
 }
 
-function boot() {
+async function boot() {
   const canvas = document.getElementById('particles')
   initParticles(canvas)
   initEffects(document.getElementById('fx'))
+
+  // 背景图存在 IndexedDB 里：先预热成内存 objectURL，再渲染，避免首屏闪一下渐变
+  try {
+    await initUserBgs()
+  } catch (e) {
+    console.error('背景库读取失败', e)
+  }
 
   const state = init()
   applyAppearance(state)

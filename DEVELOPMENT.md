@@ -4,7 +4,7 @@
 
 ## 技术栈
 
-原生 ES Module + Vite，无框架。桌面端 Electron 31，移动端 Capacitor 7（WebView 套壳）。数据全部存 `localStorage`。
+原生 ES Module + Vite，无框架。桌面端 Electron 31，移动端 Capacitor 7（WebView 套壳）。结构化数据（目标、记录、设置）存 `localStorage`，自添背景图存 `IndexedDB`（`src/bg-store.js`），启动时预热成内存里的 `objectURL` 供同步读取。
 
 ```bash
 npm install
@@ -20,6 +20,8 @@ npm run electron:dev  # Electron 窗口调试
 src/
   main.js          路由 / 顶栏 / 底栏 / 隐藏界面 / 跨日检查
   state.js         状态、存储、目标/子目标、金额分配、每日次数
+  bg-store.js      IndexedDB 背景图仓库（meta / blobs / thumbs 三个 store）
+  bg-transform.js  背景拖动缩放
   draw.js          8 档概率引擎（纯函数）
   themes.js        配色主题 + 立绘背景（分组）
   bg-colors.js     每张立绘自动提取的主题色（脚本生成，勿手改）
