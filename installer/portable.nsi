@@ -7,7 +7,7 @@ SetDatablockOptimize on
 CRCCheck off
 
 !define APP_NAME "攒钱盲盒"
-!define APP_VERSION "1.0.5"
+!define APP_VERSION "1.0.7"
 !define APP_EXE "CoinBox.exe"
 
 Name "${APP_NAME} 便携版"
@@ -15,7 +15,7 @@ OutFile "..\release\CoinBox-${APP_VERSION}-x64-Portable.exe"
 Icon "..\build\icon.ico"
 UninstallIcon "..\build\icon.ico"
 
-VIProductVersion "1.0.5.0"
+VIProductVersion "1.0.7.0"
 VIAddVersionKey "ProductName" "${APP_NAME}"
 VIAddVersionKey "FileDescription" "${APP_NAME} 便携版"
 VIAddVersionKey "FileVersion" "${APP_VERSION}.0"
