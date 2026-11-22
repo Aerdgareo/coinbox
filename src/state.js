@@ -2,9 +2,13 @@ import { generateTiers, rollTier, clamp } from './draw.js'
 
 const STORE_KEY = 'coinbox.state.v2'
 const IMG_KEY = 'coinbox.bgimage.v1'
+const USERBG_KEY = 'coinbox.userbgs.v1'
 
 export const BG_FITS = ['cover', 'contain', 'tile', 'stretch', 'blur']
 export const BG_EFFECTS = ['none', 'snow', 'stars', 'notes', 'sakura']
+
+/** 压暗默认值：圆心在 50% / 20%（人物头部），范围与强度都是 100% */
+export const DIM_DEFAULTS = { dimX: 50, dimY: 20, dimSpread: 100, dimStrength: 100 }
 
 const listeners = []
 let state = null
@@ -116,6 +120,8 @@ function defaultState() {
       dimY: 20,
       dimSpread: 100,
       dimStrength: 100,
+      dimPresets: {},
+      userBgId: '',
       bgZoom: 1,
       bgOffX: 0,
       bgOffY: 0,
@@ -184,6 +190,33 @@ function migrate(raw) {
   s.settings.bgZoom = clamp(numOr(s.settings.bgZoom, 1), 1, 3)
   s.settings.bgOffX = clamp(numOr(s.settings.bgOffX, 0), -80, 80)
   s.settings.bgOffY = clamp(numOr(s.settings.bgOffY, 0), -80, 80)
+
+  // 每张背景一套压暗参数：{ 'theme:photo-miku-01': {x,y,spread,strength}, 'user:ub_xxx': {...} }
+  if (!s.settings.dimPresets || typeof s.settings.dimPresets !== 'object' || Array.isArray(s.settings.dimPresets)) {
+    s.settings.dimPresets = {}
+  }
+  const presets = s.settings.dimPresets
+  const pkeys = Object.keys(presets)
+  for (let i = 0; i < pkeys.length; i++) {
+    const p = presets[pkeys[i]]
+    if (!p || typeof p !== 'object') {
+      delete presets[pkeys[i]]
+      continue
+    }
+    presets[pkeys[i]] = {
+      x: clamp(numOr(p.x, 50), 0, 100),
+      y: clamp(numOr(p.y, 20), 0, 100),
+      spread: clamp(numOr(p.spread, 100), 60, 200),
+      strength: clamp(numOr(p.strength, 100), 20, 180)
+    }
+  }
+
+  // 用户自添背景：选中的那张可能已被删除
+  const own = loadUserBgs()
+  if (!own.some(function (b) { return b.id === s.settings.userBgId })) {
+    s.settings.userBgId = own.length ? own[0].id : ''
+  }
+
   if (s.settings.drawQuota !== 'perGoal') s.settings.drawQuota = 'shared'
   if (!s.draw || typeof s.draw !== 'object') s.draw = { date: '', used: 0, usedByGoal: {}, tiers: null }
   if (!s.draw.usedByGoal || typeof s.draw.usedByGoal !== 'object') s.draw.usedByGoal = {}
@@ -505,6 +538,13 @@ export function deleteGoal(id) {  if (state.goals.length <= 1) return false
 }
 
 export function updateSettings(patch) {
+  // 换背景之前，先把当前这张的压暗参数存下来，切回来还能还原
+  const beforeKey = currentBgKey()
+  const bgChanged = patch.theme != null || patch.bgMode != null || patch.userBgId != null
+  if (bgChanged && beforeKey) {
+    storeDimPreset(state.settings, beforeKey)
+  }
+
   const keys = Object.keys(patch)
   for (let i = 0; i < keys.length; i++) {
     state.settings[keys[i]] = patch[keys[i]]
@@ -532,6 +572,80 @@ export function updateSettings(patch) {
   if (patch.bgOffX != null) state.settings.bgOffX = clamp(numOr(patch.bgOffX, 0), -80, 80)
   if (patch.bgOffY != null) state.settings.bgOffY = clamp(numOr(patch.bgOffY, 0), -80, 80)
   if (patch.drawQuota != null) state.settings.drawQuota = patch.drawQuota === 'perGoal' ? 'perGoal' : 'shared'
+
+  // 切到「自定义图片」但还没选具体哪张时，默认落到库里的第一张
+  if (state.settings.bgMode === 'image' && !state.settings.userBgId) {
+    const own = loadUserBgs()
+    if (own.length) state.settings.userBgId = own[0].id
+  }
+
+  const dimTouched =
+    patch.dimX != null || patch.dimY != null || patch.dimSpread != null || patch.dimStrength != null
+  if (dimTouched) {
+    storeDimPreset(state.settings, currentBgKey())
+  }
+
+  // 换到另一张背景：把这张自己的压暗参数装回去，没调过就用默认
+  if (bgChanged) {
+    const k = currentBgKey()
+    applyDimValues(state.settings, (k && state.settings.dimPresets[k]) || null)
+  }
+
+  save()
+}
+
+/* ---------------- 压暗：每张背景各存一套 ---------------- */
+
+function dimSnapshot(s) {
+  return {
+    x: clamp(numOr(s.dimX, 50), 0, 100),
+    y: clamp(numOr(s.dimY, 20), 0, 100),
+    spread: clamp(numOr(s.dimSpread, 100), 60, 200),
+    strength: clamp(numOr(s.dimStrength, 100), 20, 180)
+  }
+}
+
+function isDimDefault(v) {
+  return v.x === 50 && v.y === 20 && v.spread === 100 && v.strength === 100
+}
+
+/** 把当前值存到某张背景名下；值等于默认就不存，避免出现「没调过却标记已调」 */
+function storeDimPreset(s, key) {
+  if (!key) return
+  const snap = dimSnapshot(s)
+  if (isDimDefault(snap)) delete s.dimPresets[key]
+  else s.dimPresets[key] = snap
+}
+
+function applyDimValues(s, v) {
+  const d = v || { x: 50, y: 20, spread: 100, strength: 100 }
+  s.dimX = clamp(numOr(d.x, 50), 0, 100)
+  s.dimY = clamp(numOr(d.y, 20), 0, 100)
+  s.dimSpread = clamp(numOr(d.spread, 100), 60, 200)
+  s.dimStrength = clamp(numOr(d.strength, 100), 20, 180)
+}
+
+/**
+ * 当前生效背景的标识：
+ * - 立绘主题 → 'theme:<主题 id>'
+ * - 自添图片 → 'user:<图片 id>'
+ * - 纯色 / 渐变 → ''（没有图，压暗只跟随全局默认）
+ */
+export function currentBgKey(st) {
+  const s = st || (state && state.settings) || {}
+  if (s.bgMode === 'image') {
+    const b = getActiveUserBg()
+    return b ? 'user:' + b.id : ''
+  }
+  if (s.bgMode === 'theme') return 'theme:' + (s.theme || 'default')
+  return ''
+}
+
+/** 把这张背景的压暗恢复默认（同时删掉存下来的那套参数） */
+export function resetDimForCurrentBg() {
+  const k = currentBgKey()
+  if (k) delete state.settings.dimPresets[k]
+  applyDimValues(state.settings, null)
   save()
 }
 
@@ -552,24 +666,114 @@ export function setCharImage(themeId, dataUrl) {
   safeSet(CHAR_KEY + themeId, dataUrl)
 }
 
-export function getBgImage() {
-  return safeGet(IMG_KEY)
+/* ---------------- 用户自添背景：可以存多张、逐张删除 ---------------- */
+
+let userBgList = null
+
+function loadUserBgs() {
+  if (userBgList) return userBgList
+  let arr = []
+  try {
+    arr = JSON.parse(safeGet(USERBG_KEY) || '[]')
+  } catch (e) {
+    arr = []
+  }
+  if (!Array.isArray(arr)) arr = []
+  arr = arr.filter(function (b) {
+    return b && b.id && b.data
+  })
+  if (!arr.length) {
+    // 旧版本只能存一张，迁移成「用户自添」里的第一张
+    const legacy = safeGet(IMG_KEY)
+    if (legacy) {
+      arr = [{ id: 'ub_legacy', name: '我的背景', data: legacy, thumb: legacy, addedAt: Date.now() }]
+      persistUserBgs(arr)
+      try {
+        localStorage.removeItem(IMG_KEY)
+      } catch (e) {}
+      memoryFallback[IMG_KEY] = null
+    }
+  }
+  userBgList = arr
+  return arr
 }
 
-export function setBgImage(dataUrl) {
-  if (!dataUrl) {
-    try {
-      localStorage.removeItem(IMG_KEY)
-    } catch (e) {}
-    memoryFallback[IMG_KEY] = null
-    return
+function persistUserBgs(arr) {
+  try {
+    localStorage.setItem(USERBG_KEY, JSON.stringify(arr))
+    return true
+  } catch (e) {
+    return false
   }
-  safeSet(IMG_KEY, dataUrl)
+}
+
+export function listUserBgs() {
+  return loadUserBgs().slice()
+}
+
+export function getActiveUserBg() {
+  const arr = loadUserBgs()
+  if (!arr.length) return null
+  const id = state && state.settings ? state.settings.userBgId : ''
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i].id === id) return arr[i]
+  }
+  return arr[0]
+}
+
+/** 加一张自添背景；本地存储写不进去（配额满）时返回 null */
+export function addUserBg(data, thumb, name) {
+  if (!data) return null
+  const arr = loadUserBgs()
+  const item = {
+    id: uid('ub'),
+    name: String(name || '我的背景 ' + (arr.length + 1)).slice(0, 24),
+    data: data,
+    thumb: thumb || data,
+    addedAt: Date.now()
+  }
+  arr.push(item)
+  if (!persistUserBgs(arr)) {
+    arr.pop()
+    return null
+  }
+  return item
+}
+
+export function removeUserBg(id) {
+  const arr = loadUserBgs()
+  let at = -1
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i].id === id) {
+      at = i
+      break
+    }
+  }
+  if (at < 0) return false
+  const item = arr.splice(at, 1)[0]
+  if (!persistUserBgs(arr)) {
+    arr.splice(at, 0, item)
+    return false
+  }
+  if (state.settings.dimPresets) delete state.settings.dimPresets['user:' + id]
+  if (state.settings.userBgId === id) {
+    state.settings.userBgId = arr.length ? arr[0].id : ''
+    if (!arr.length && state.settings.bgMode === 'image') state.settings.bgMode = 'theme'
+  }
+  save()
+  return true
+}
+
+/** 当前选中的自添背景图（appearance / bg-transform 都走这里） */
+export function getBgImage() {
+  const b = getActiveUserBg()
+  return b ? b.data : ''
 }
 
 export function exportData() {
   const data = JSON.parse(JSON.stringify(state))
   data.bgImage = getBgImage() || ''
+  data.userBgs = listUserBgs()
   return JSON.stringify(data, null, 2)
 }
 
@@ -582,11 +786,36 @@ export function importData(text) {
   }
   if (!obj || !Array.isArray(obj.goals) || obj.goals.length === 0) return false
   const bg = obj.bgImage || ''
+  const bgs = Array.isArray(obj.userBgs)
+    ? obj.userBgs.filter(function (b) {
+        return b && b.id && b.data
+      })
+    : []
   delete obj.bgImage
+  delete obj.userBgs
+
+  // 先恢复图片库，migrate 里要用它校正 userBgId
+  if (bgs.length) {
+    userBgList = bgs.map(function (b) {
+      return {
+        id: String(b.id),
+        name: String(b.name || '我的背景').slice(0, 24),
+        data: b.data,
+        thumb: b.thumb || b.data,
+        addedAt: Number(b.addedAt) || Date.now()
+      }
+    })
+    persistUserBgs(userBgList)
+  } else if (bg) {
+    userBgList = [{ id: 'ub_import', name: '导入的背景', data: bg, thumb: bg, addedAt: Date.now() }]
+    persistUserBgs(userBgList)
+    obj.settings = obj.settings || {}
+    obj.settings.userBgId = 'ub_import'
+  }
+
   state = migrate(obj)
   if (!findGoal(state.activeGoal)) state.activeGoal = state.goals[0].id
   refreshDaily(true)
-  setBgImage(bg)
   save()
   return true
 }
@@ -594,6 +823,10 @@ export function importData(text) {
 export function resetAll() {
   state = defaultState()
   refreshDaily(true)
-  setBgImage('')
+  userBgList = []
+  try {
+    localStorage.removeItem(USERBG_KEY)
+  } catch (e) {}
+  memoryFallback[USERBG_KEY] = null
   save()
 }

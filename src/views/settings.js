@@ -7,7 +7,12 @@ import {
   setActiveGoal,
   findGoal,
   getBgImage,
-  setBgImage,
+  listUserBgs,
+  addUserBg,
+  removeUserBg,
+  getActiveUserBg,
+  currentBgKey,
+  resetDimForCurrentBg,
   exportData,
   importData,
   resetAll
@@ -76,8 +81,54 @@ function themeSection(s) {
     gridHtml(colorList, s.theme) +
     '<div class="label mt-16">立绘背景 · 按角色分组</div>' +
     photoHtml +
+    userBgGroup(s) +
+    '<input type="file" id="ub-file" accept="image/*" multiple style="display:none">' +
     '<div class="faint tiny mt-12" style="line-height:1.6">配色主题是纯配色 + 光效背景；立绘背景会把角色图铺满整页，点分组标题展开。</div>' +
     '</div>'
+  )
+}
+
+function userBgGroup(s) {
+  const list = listUserBgs()
+  const active = s.bgMode === 'image' ? getActiveUserBg() : null
+  const activeId = active ? active.id : ''
+  // 这一组常驻展开：新用户靠它找到「添加图片」入口
+  const open = true
+
+  let cards = ''
+  for (let i = 0; i < list.length; i++) {
+    const b = list[i]
+    const on = activeId === b.id
+    const when = new Date(Number(b.addedAt) || Date.now())
+    const date = when.getMonth() + 1 + '-' + when.getDate()
+    cards +=
+      '<div class="theme-card' + (on ? ' active' : '') + '">' +
+      '<div class="theme-card-inner" data-usebg="' + b.id + '"' +
+      ' style="background:linear-gradient(rgba(6,8,14,0.22),rgba(6,8,14,0.6)),url(&quot;' + (b.thumb || b.data) + '&quot;) center 18%/cover;">' +
+      '<span class="tc-check">✓</span>' +
+      '<button class="tc-del" data-delbg="' + b.id + '" title="删除这张">×</button>' +
+      '<div class="tc-name">' + escapeHtml(b.name) + '</div>' +
+      '<div class="tc-sub">自添 · ' + date + '</div>' +
+      '</div></div>'
+  }
+  cards +=
+    '<div class="theme-card"><div class="theme-card-inner theme-add" data-ub-add>' +
+    '<span class="tc-plus">＋</span><span>添加图片</span></div></div>'
+
+  return (
+    '<div class="theme-group' + (open ? ' open' : '') + '">' +
+    '<button class="theme-group-head" data-tg>' +
+    '<span class="tg-name">用户自添</span>' +
+    '<span class="tg-count">' + (list.length ? list.length + ' 张' : '空') + '</span>' +
+    '<span class="tg-arrow">▾</span>' +
+    '</button>' +
+    '<div class="theme-group-body">' +
+    (list.length
+      ? ''
+      : '<div class="faint tiny" style="padding:2px 0 8px;line-height:1.6">还没有自己的背景。添加后每张单独保存，可以随时切换或删掉。</div>') +
+    '<div class="theme-grid">' + cards + '</div>' +
+    '<div class="faint tiny mt-8" style="line-height:1.6">图片压缩后存在本机（约 5MB 额度，大概 8~12 张），不上传；点卡片左上角 × 可以删掉。</div>' +
+    '</div></div>'
   )
 }
 
@@ -184,13 +235,19 @@ function backgroundSection(s) {
       '<input type="color" id="grad-2" value="' + g[1] + '" style="width:100%;height:42px;border:1px solid var(--border);border-radius:12px;background:none"></div>' +
       '</div>'
   } else if (s.bgMode === 'image') {
-    const has = !!getBgImage()
+    const cur = getActiveUserBg()
+    const count = listUserBgs().length
     controls =
       '<div class="mt-16">' +
-      '<input type="file" id="bg-file" accept="image/*" style="display:none">' +
-      '<button class="btn btn-ghost btn-block" id="bg-pick">' + (has ? '更换图片' : '选择图片') + '</button>' +
-      (has ? '<button class="btn btn-ghost btn-block mt-8" id="bg-clear" style="color:var(--bad)">移除图片</button>' : '') +
-      '<div class="faint tiny mt-8">图片会压缩后存在本机，不会上传。</div>' +
+      (cur
+        ? '<div class="ub-current">' +
+          '<div class="ub-thumb" style="background-image:url(&quot;' + (cur.thumb || cur.data) + '&quot;)"></div>' +
+          '<div class="ub-meta"><div class="row-title">' + escapeHtml(cur.name) + '</div>' +
+          '<div class="row-sub">用户自添 · 共 ' + count + ' 张</div></div></div>'
+        : '<div class="faint tiny" style="line-height:1.6">还没添加过图片，点下面按钮加一张。</div>') +
+      '<input type="file" id="bg-file" accept="image/*" multiple style="display:none">' +
+      '<button class="btn btn-ghost btn-block mt-12" id="bg-pick">添加图片</button>' +
+      '<div class="faint tiny mt-8" style="line-height:1.6">可以一次选多张。所有图都在上面「用户自添」分组里，点卡片切换、点 × 删除。</div>' +
       '</div>'
   }
 
@@ -230,15 +287,32 @@ function dimRow(name, id, min, max, val, unit) {
   )
 }
 
+function bgLabel(s) {
+  if (s.bgMode === 'image') {
+    const b = getActiveUserBg()
+    return b ? '用户自添 · ' + b.name : '自定义图片（还没选）'
+  }
+  if (s.bgMode === 'theme') {
+    const t = getTheme(s.theme)
+    return t ? t.name : '跟随主题'
+  }
+  return s.bgMode === 'solid' ? '纯色背景' : '渐变背景'
+}
+
 function dimSection(s) {
   const img = previewBg(s)
   const style =
     (img ? 'background-image:url(&quot;' + img + '&quot;);' : '') + '--dim-layer:' + dimGradient(s) + ';'
+  const key = currentBgKey()
+  const presets = s.dimPresets || {}
+  const tuned = !!(key && presets[key])
 
   return (
     '<div class="card">' +
-    '<div class="card-title" style="margin-bottom:10px"><span class="t"><i>🕶</i>隐藏界面时的压暗</span>' +
-    '<span class="faint tiny">中心亮、四周暗</span></div>' +
+    '<div class="card-title" style="margin-bottom:8px"><span class="t"><i>🕶</i>隐藏界面时的压暗</span>' +
+    '<span class="faint tiny">每张背景各存一套</span></div>' +
+    '<div class="dim-cur"><span class="dim-cur-name">当前背景：' + escapeHtml(bgLabel(s)) + '</span>' +
+    '<span class="dim-cur-tag' + (tuned ? ' on' : '') + '">' + (tuned ? '已单独调过' : '默认值') + '</span></div>' +
     '<div class="dim-pv" id="dim-pv" style="' + style + '">' +
     '<span class="dim-pv-tag">预览 · 虚线是压暗中心</span>' +
     '<i class="dim-pv-dot" id="dim-dot" style="left:' + Math.round(s.dimX) + '%;top:' + Math.round(s.dimY) + '%"></i>' +
@@ -247,7 +321,8 @@ function dimSection(s) {
     dimRow('中心 Y', 'dim-y', 0, 100, Math.round(s.dimY), '%') +
     dimRow('范围', 'dim-spread', 60, 200, Math.round(s.dimSpread), '%') +
     dimRow('强度', 'dim-strength', 20, 180, Math.round(s.dimStrength), '%') +
-    '<div class="faint tiny mt-8" style="line-height:1.6">圆心默认在 50% / 20%——人物头部的位置，所以脸最清楚，四周和底部逐渐压暗。虚线圆圈就是圆心；想看真实效果，点右下角 👁 隐藏界面。</div>' +
+    '<button class="btn btn-ghost btn-block mt-12" id="dim-reset">重置这张背景的压暗</button>' +
+    '<div class="faint tiny mt-8" style="line-height:1.6">圆心默认在 50% / 20%——人物头部的位置，所以脸最清楚，四周和底部逐渐压暗。虚线圆圈就是圆心；想看真实效果，点右下角 👁 隐藏界面。<br>每张背景（立绘和自添图片都算）单独保存，切回来自动还原；点重置只影响当前这张。</div>' +
     '</div>'
   )
 }
@@ -542,27 +617,65 @@ function bind(el) {
     g2.addEventListener('change', applyGrad)
   }
 
+  // 用户自添背景：选中 / 删除 / 添加（两个入口共用一个批量导入）
+  el.querySelectorAll('[data-usebg]').forEach(function (n) {
+    n.addEventListener('click', function () {
+      const id = n.getAttribute('data-usebg')
+      const cur = getState().settings
+      if (cur.bgMode === 'image' && cur.userBgId === id) return
+      updateSettings({ bgMode: 'image', userBgId: id, bgZoom: 1, bgOffX: 0, bgOffY: 0 })
+      toast('已切换背景')
+    })
+  })
+
+  el.querySelectorAll('[data-delbg]').forEach(function (n) {
+    n.addEventListener('click', function (e) {
+      e.stopPropagation()
+      const id = n.getAttribute('data-delbg')
+      const item = listUserBgs().filter(function (b) {
+        return b.id === id
+      })[0]
+      confirmDialog('删除「' + (item ? item.name : '这张背景') + '」？', '删掉后需要重新添加，其他背景不受影响。', true).then(function (ok) {
+        if (!ok) return
+        const wasCurrent = getState().settings.bgMode === 'image' && getState().settings.userBgId === id
+        if (removeUserBg(id)) {
+          if (wasCurrent) toast('已删除，切换到下一张')
+          else toast('已删除')
+        } else {
+          toast('删除失败，本地存储不可写')
+        }
+      })
+    })
+  })
+
+  const ubFile = el.querySelector('#ub-file')
+  el.querySelectorAll('[data-ub-add]').forEach(function (n) {
+    n.addEventListener('click', function () {
+      if (ubFile) ubFile.click()
+    })
+  })
+  if (ubFile) {
+    ubFile.addEventListener('change', function () {
+      importBgFiles(ubFile.files)
+      ubFile.value = ''
+    })
+  }
+
   const file = el.querySelector('#bg-file')
   const pick = el.querySelector('#bg-pick')
   if (pick && file) {
     pick.addEventListener('click', function () { file.click() })
     file.addEventListener('change', function () {
-      const f = file.files && file.files[0]
-      if (!f) return
-      compressImage(f, function (data) {
-        setBgImage(data)
-        updateSettings({ bgMode: 'image' })
-        toast('背景已更新')
-      })
+      importBgFiles(file.files)
+      file.value = ''
     })
   }
 
-  const clearBg = el.querySelector('#bg-clear')
-  if (clearBg) {
-    clearBg.addEventListener('click', function () {
-      setBgImage('')
-      updateSettings({ bgMode: 'theme' })
-      toast('已移除背景图片')
+  const dimReset = el.querySelector('#dim-reset')
+  if (dimReset) {
+    dimReset.addEventListener('click', function () {
+      resetDimForCurrentBg()
+      toast('这张背景的压暗已恢复默认')
     })
   }
 
@@ -796,14 +909,51 @@ function showImport() {
   })
 }
 
+/**
+ * 导入一张或多张背景：压缩成大图 + 小缩略图，逐张存进「用户自添」
+ * cb 收到 null 表示这张读不出来
+ */
+function importBgFiles(files) {
+  const list = Array.prototype.slice.call(files || [])
+  if (!list.length) return
+  let pending = list.length
+  let last = null
+  let failed = 0
+  list.forEach(function (f) {
+    compressImage(f, function (out) {
+      if (out) {
+        const name = String(f.name || '').replace(/\.[^./\\]+$/, '').slice(0, 24)
+        const item = addUserBg(out.data, out.thumb, name)
+        if (item) last = item
+        else failed++
+      } else {
+        failed++
+      }
+      pending--
+      if (pending > 0) return
+      if (last) {
+        updateSettings({ bgMode: 'image', userBgId: last.id, bgZoom: 1, bgOffX: 0, bgOffY: 0 })
+      }
+      if (failed) {
+        toast(failed === list.length ? '这些图读不出来，换几张试试' : '本地存储空间不足，' + failed + ' 张没存上；先删掉几张再加')
+      } else {
+        toast(list.length > 1 ? '已添加 ' + list.length + ' 张背景' : '已添加背景')
+      }
+    })
+  })
+}
+
 function compressImage(file, cb) {
   const reader = new FileReader()
+  reader.onerror = function () { cb(null) }
   reader.onload = function (e) {
     const img = new Image()
+    img.onerror = function () { cb(null) }
     img.onload = function () {
       const max = 1440
       let w = img.width
       let h = img.height
+      if (!w || !h) { cb(null); return }
       if (w > max || h > max) {
         const k = Math.min(max / w, max / h)
         w = Math.round(w * k)
@@ -814,9 +964,19 @@ function compressImage(file, cb) {
       c.height = h
       const ctx = c.getContext('2d')
       ctx.drawImage(img, 0, 0, w, h)
-      cb(c.toDataURL('image/jpeg', 0.72))
+      const data = c.toDataURL('image/jpeg', 0.72)
+
+      // 列表里的缩略图单独做一份，避免把几百 KB 的大图塞进每一张卡片
+      const k2 = Math.min(1, 360 / Math.max(w, h))
+      const tc = document.createElement('canvas')
+      tc.width = Math.max(1, Math.round(w * k2))
+      tc.height = Math.max(1, Math.round(h * k2))
+      const tctx = tc.getContext('2d')
+      tctx.drawImage(c, 0, 0, tc.width, tc.height)
+      const thumb = tc.toDataURL('image/jpeg', 0.62)
+
+      cb({ data: data, thumb: thumb })
     }
-    img.onerror = function () { toast('这张图读不出来') }
     img.src = e.target.result
   }
   reader.readAsDataURL(file)
